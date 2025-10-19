@@ -300,5 +300,215 @@ document.addEventListener('DOMContentLoaded', function() {
     statNumbers.forEach(stat => {
         statObserver.observe(stat);
     });
+
+    // PDF Upload and Download functionality
+    const uploadArea = document.getElementById('uploadArea');
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    const filesList = document.getElementById('filesList');
+    
+    let uploadedFiles = []; // 여러 파일을 관리하는 배열
+
+    // Click to upload
+    uploadArea.addEventListener('click', () => {
+        pdfFileInput.click();
+    });
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--primary-color)';
+        uploadArea.style.background = 'var(--bg-secondary)';
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'var(--border-color)';
+        uploadArea.style.background = 'var(--bg-tertiary)';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--border-color)';
+        uploadArea.style.background = 'var(--bg-tertiary)';
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleFilesUpload(files);
+    });
+
+    // File input change
+    pdfFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        handleFilesUpload(files);
+    });
+
+    // Handle multiple files upload
+    function handleFilesUpload(files) {
+        files.forEach(file => {
+            // Check if file is PDF
+            if (file.type !== 'application/pdf') {
+                showNotification(`${file.name}은 PDF 파일이 아닙니다.`, 'error');
+                return;
+            }
+
+            // Check file size (10MB limit)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                showNotification(`${file.name}의 크기는 10MB 이하여야 합니다.`, 'error');
+                return;
+            }
+
+            // Add file to uploaded files array
+            const fileData = {
+                id: Date.now() + Math.random(),
+                file: file,
+                isPaid: false
+            };
+            uploadedFiles.push(fileData);
+            
+            // Display file card
+            displayFileCard(fileData);
+        });
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Display file card
+    function displayFileCard(fileData) {
+        const fileCard = document.createElement('div');
+        fileCard.className = 'file-card';
+        fileCard.dataset.fileId = fileData.id;
+        
+        fileCard.innerHTML = `
+            <div class="file-card-header">
+                <div class="file-card-info">
+                    <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <div class="file-card-details">
+                        <span class="file-card-name">${fileData.file.name}</span>
+                        <span class="file-card-size">${formatFileSize(fileData.file.size)}</span>
+                    </div>
+                </div>
+                <button class="remove-file-card-btn" onclick="removeFile(${fileData.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="file-card-body">
+                <div class="price-info">
+                    <span class="price-label">가격</span>
+                    <span class="price-value">5,000원</span>
+                </div>
+                <button class="file-payment-btn" onclick="requestPaymentForFile(${fileData.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    결제하기
+                </button>
+                <button class="file-download-btn" onclick="downloadFile(${fileData.id})" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    다운로드
+                </button>
+            </div>
+        `;
+        
+        filesList.appendChild(fileCard);
+    }
+
+    // Remove file
+    window.removeFile = function(fileId) {
+        uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+        const fileCard = document.querySelector(`[data-file-id="${fileId}"]`);
+        if (fileCard) {
+            fileCard.remove();
+        }
+    };
+
+    // Request payment for specific file
+    window.requestPaymentForFile = async function(fileId) {
+        const fileData = uploadedFiles.find(f => f.id === fileId);
+        if (!fileData) {
+            showNotification('파일을 찾을 수 없습니다.', 'error');
+            return;
+        }
+
+        // 토스페이먼츠 초기화 (테스트용 키)
+        const tossPayments = TossPayments('test_ck_xxxxx'); // 테스트용 키
+
+        try {
+            showNotification('결제를 진행합니다...', 'success');
+
+            // 결제 요청
+            await tossPayments.requestPayment('카드', {
+                amount: 5000,
+                orderId: 'order_' + fileId,
+                orderName: fileData.file.name,
+                customerName: '구매자',
+                successUrl: window.location.href + `?success=true&fileId=${fileId}`,
+                failUrl: window.location.href + `?fail=true&fileId=${fileId}`,
+            });
+        } catch (err) {
+            showNotification('결제 중 오류가 발생했습니다.', 'error');
+            console.log('에러:', err);
+        }
+    };
+
+    // Download file
+    window.downloadFile = function(fileId) {
+        const fileData = uploadedFiles.find(f => f.id === fileId);
+        if (!fileData) {
+            showNotification('파일을 찾을 수 없습니다.', 'error');
+            return;
+        }
+
+        if (!fileData.isPaid) {
+            showNotification('먼저 결제를 완료해주세요.', 'error');
+            return;
+        }
+
+        // Create download link
+        const url = URL.createObjectURL(fileData.file);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileData.file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showNotification('다운로드가 시작되었습니다!', 'success');
+    };
+
+    // 페이지 로드 시 결제 성공 여부 확인
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            const fileId = parseFloat(urlParams.get('fileId'));
+            const fileData = uploadedFiles.find(f => f.id === fileId);
+            
+            if (fileData) {
+                fileData.isPaid = true;
+                const fileCard = document.querySelector(`[data-file-id="${fileId}"]`);
+                if (fileCard) {
+                    const paymentBtn = fileCard.querySelector('.file-payment-btn');
+                    const downloadBtn = fileCard.querySelector('.file-download-btn');
+                    paymentBtn.style.display = 'none';
+                    downloadBtn.style.display = 'flex';
+                }
+                showNotification('결제가 완료되었습니다! 이제 다운로드가 가능합니다.', 'success');
+            }
+        } else if (urlParams.get('fail') === 'true') {
+            showNotification('결제에 실패했습니다.', 'error');
+        }
+    });
 });
 

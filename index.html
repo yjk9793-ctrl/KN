@@ -6,6 +6,8 @@
     <title>K& Partner - Your Starting Partner</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- 토스페이먼츠 결제 시스템 -->
+    <script src="https://js.tosspayments.com/v1/payment"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -19,6 +21,7 @@
                     <li><a href="#home" class="nav-link">홈</a></li>
                     <li><a href="#services" class="nav-link">서비스</a></li>
                     <li><a href="#about" class="nav-link">회사소개</a></li>
+                    <li><a href="#pdf-download" class="nav-link">자료 다운로드</a></li>
                     <li><a href="#contact" class="nav-link">문의하기</a></li>
                 </ul>
                 <div class="hamburger">
@@ -134,6 +137,33 @@
                             <div class="stat-label">경력 연수</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PDF Download Section -->
+    <section id="pdf-download" class="pdf-download">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Premium Resources</h2>
+                <p class="section-subtitle">전문 자료를 다운로드하고 성공의 길로 가세요</p>
+            </div>
+            <div class="pdf-wrapper">
+                <div class="pdf-upload-section">
+                    <h3>PDF 업로드</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="upload-text">PDF 파일을 드래그하거나 클릭하여 업로드</p>
+                        <p class="upload-hint">최대 10MB까지 업로드 가능 (여러 파일 선택 가능)</p>
+                        <input type="file" id="pdfFileInput" accept=".pdf" multiple hidden>
+                    </div>
+                </div>
+
+                <div class="files-list" id="filesList">
+                    <!-- 업로드된 파일들이 여기에 표시됩니다 -->
                 </div>
             </div>
         </div>
