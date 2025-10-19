@@ -315,7 +315,12 @@ section {
 
 /* Services Section */
 .services {
-    background: var(--bg-secondary);
+    background: 
+        linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%),
+        url('https://cdn.pixabay.com/photo/2024/05/18/17/29/ruhr-area-8770681_1280.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .services-grid {
@@ -389,7 +394,12 @@ section {
 
 /* About Section */
 .about {
-    background: var(--bg-primary);
+    background: 
+        linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%),
+        url('https://cdn.pixabay.com/photo/2024/05/18/17/29/ruhr-area-8770681_1280.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .about-content {
@@ -446,7 +456,12 @@ section {
 
 /* PDF Download Section */
 .pdf-download {
-    background: var(--bg-primary);
+    background: 
+        linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%),
+        url('https://cdn.pixabay.com/photo/2024/05/18/17/29/ruhr-area-8770681_1280.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .pdf-wrapper {
@@ -794,7 +809,12 @@ section {
 
 /* Contact Section */
 .contact {
-    background: var(--bg-secondary);
+    background: 
+        linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%),
+        url('https://cdn.pixabay.com/photo/2024/05/18/17/29/ruhr-area-8770681_1280.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 .contact-wrapper {
@@ -898,7 +918,12 @@ section {
 
 /* Footer */
 .footer {
-    background: var(--bg-primary);
+    background: 
+        linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%),
+        url('https://cdn.pixabay.com/photo/2024/05/18/17/29/ruhr-area-8770681_1280.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     padding: 3rem 0 1rem;
     border-top: 1px solid var(--border-color);
 }
