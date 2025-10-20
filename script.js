@@ -510,5 +510,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('결제에 실패했습니다.', 'error');
         }
     });
+
 });
 
