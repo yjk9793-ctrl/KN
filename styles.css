@@ -214,8 +214,8 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.12;
-    filter: blur(2px) brightness(0.8);
+    opacity: 0.3;
+    filter: blur(1px) brightness(0.7);
     transition: transform 20s ease;
 }
 
@@ -228,9 +228,9 @@ body {
     inset: 0;
     background: linear-gradient(
         135deg,
-        rgba(10, 10, 15, 0.9) 0%,
-        rgba(17, 17, 24, 0.85) 50%,
-        rgba(10, 10, 15, 0.9) 100%
+        rgba(10, 10, 15, 0.75) 0%,
+        rgba(17, 17, 24, 0.7) 50%,
+        rgba(10, 10, 15, 0.75) 100%
     );
     z-index: 1;
 }
