@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -94,8 +96,8 @@
                             <li>포트폴리오 구성 가이드</li>
                             <li>취업 전략 수립</li>
                         </ul>
-                        <a href="#contact" class="card-link">
-                            상담 신청하기
+                        <a href="#contact" class="card-link" data-service="취업 컨설팅" onclick="setServiceType('취업 컨설팅'); return false;">
+                            상세
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -120,8 +122,8 @@
                             <li>업계 트렌드 분석</li>
                             <li>네트워킹 전략</li>
                         </ul>
-                        <a href="#contact" class="card-link">
-                            상담 신청하기
+                        <a href="#contact" class="card-link" data-service="이직/커리어 컨설팅" onclick="setServiceType('이직/커리어 컨설팅'); return false;">
+                            상세
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -146,8 +148,8 @@
                             <li>시장 분석 및 경쟁 분석</li>
                             <li>법인 설립 및 법률 자문</li>
                         </ul>
-                        <a href="#contact" class="card-link">
-                            상담 신청하기
+                        <a href="#contact" class="card-link" data-service="스타트업 창업 컨설팅" onclick="setServiceType('스타트업 창업 컨설팅'); return false;">
+                            상세
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -234,6 +236,11 @@
                     </div>
                 </div>
                 <form class="contact-form" id="contactForm">
+                    <input type="hidden" id="serviceType" name="serviceType" value="">
+                    <div class="form-group" id="serviceDisplayGroup" style="display: none;">
+                        <label>선택한 서비스</label>
+                        <div class="selected-service" id="selectedService" style="padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border: 1px solid var(--color-primary); border-radius: var(--radius-md); color: var(--color-primary); font-weight: 600;"></div>
+                    </div>
                     <div class="form-group">
                         <label for="name">성명 *</label>
                         <input type="text" id="name" name="name" required placeholder="홍길동">

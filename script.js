@@ -103,33 +103,68 @@ revealElements.forEach(element => {
 });
 
 // ============================================
+// Service Type Selection
+// ============================================
+
+window.setServiceType = function(serviceType) {
+    const serviceTypeInput = document.getElementById('serviceType');
+    const serviceDisplayGroup = document.getElementById('serviceDisplayGroup');
+    const selectedService = document.getElementById('selectedService');
+    
+    if (serviceTypeInput && serviceDisplayGroup && selectedService) {
+        serviceTypeInput.value = serviceType;
+        selectedService.textContent = serviceType;
+        serviceDisplayGroup.style.display = 'block';
+        
+        // 스크롤 to contact form
+        const contactSection = document.getElementById('contact');
+        if (contactSection) {
+            const offsetTop = contactSection.offsetTop - 80;
+            window.scrollTo({
+                top: offsetTop,
+                behavior: 'smooth'
+            });
+        }
+    }
+};
+
+// ============================================
 // Contact Form Handling
 // ============================================
 
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const formData = {
             name: document.getElementById('name').value.trim(),
             email: document.getElementById('email').value.trim(),
+            serviceType: document.getElementById('serviceType').value || '일반 문의',
             message: document.getElementById('message').value.trim()
         };
 
         // Validation
         if (validateForm(formData)) {
-            showNotification('문의가 성공적으로 전송되었습니다! 빠른 시일 내에 연락드리겠습니다.', 'success');
-            contactForm.reset();
-            
-            // In production, send data to server
-            console.log('Form Data:', formData);
-            
-            // 예시: 이메일 전송 (실제 서버로 전송해야 함)
-            // fetch('/api/contact', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(formData)
-            // });
+            try {
+                // 이메일 발송
+                await sendEmail(formData);
+                
+                showNotification('문의가 성공적으로 전송되었습니다! 빠른 시일 내에 연락드리겠습니다.', 'success');
+                contactForm.reset();
+                
+                // 서비스 선택 필드 초기화
+                const serviceDisplayGroup = document.getElementById('serviceDisplayGroup');
+                if (serviceDisplayGroup) {
+                    serviceDisplayGroup.style.display = 'none';
+                }
+                const serviceTypeInput = document.getElementById('serviceType');
+                if (serviceTypeInput) {
+                    serviceTypeInput.value = '';
+                }
+            } catch (error) {
+                console.error('Email send error:', error);
+                showNotification('문의 전송 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+            }
         } else {
             showNotification('모든 필드를 올바르게 입력해주세요.', 'error');
         }
@@ -155,6 +190,47 @@ function validateForm(data) {
     }
 
     return true;
+}
+
+// ============================================
+// Email Sending Function
+// ============================================
+
+async function sendEmail(formData) {
+    try {
+        // Vercel API Route를 통한 이메일 발송
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to send email');
+        }
+
+        return Promise.resolve();
+    } catch (error) {
+        console.error('Email send error:', error);
+        
+        // API Route가 실패한 경우 mailto 링크로 대체
+        const subject = encodeURIComponent(`[K&Partners 문의] ${formData.serviceType || '일반 문의'} - ${formData.name}`);
+        const body = encodeURIComponent(
+            `서비스 유형: ${formData.serviceType || '일반 문의'}\n\n` +
+            `성명: ${formData.name}\n` +
+            `이메일: ${formData.email}\n\n` +
+            `문의 내용:\n${formData.message}`
+        );
+        
+        const mailtoLink = `mailto:yjk9793@naver.com?subject=${subject}&body=${body}`;
+        window.open(mailtoLink, '_blank');
+        
+        return Promise.resolve();
+    }
 }
 
 // ============================================
