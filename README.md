@@ -1,6 +1,6 @@
-# K& Partner - Your Starting Partner
+# K&Partners - Your Starting Partner
 
-K& Partner는 취업, 이직, 창업 컨설팅 서비스를 제공하는 전문 웹사이트입니다.
+K&Partners는 취업, 이직, 창업 컨설팅 서비스를 제공하는 전문 웹사이트입니다.
 
 ## 🎨 디자인 특징
 
@@ -12,7 +12,7 @@ K& Partner는 취업, 이직, 창업 컨설팅 서비스를 제공하는 전문 
 ## 🚀 주요 기능
 
 ### 1. 히어로 섹션
-- 중앙에 회사 이름 "K& Partner" 표시
+- 중앙에 회사 이름 "K&Partners" 표시
 - "Your Starting Partner" 서브타이틀
 - 그라데이션 배경과 그리드 패턴
 - 스크롤 인디케이터
@@ -23,10 +23,17 @@ K& Partner는 취업, 이직, 창업 컨설팅 서비스를 제공하는 전문 
 - **창업 컨설팅**: 사업계획서 작성, 자금 조달, 시장 분석
 
 ### 3. 회사 소개 섹션
-- K& Partner에 대한 소개
+- K&Partners에 대한 소개
 - 성공 사례, 만족도, 경력 연수 통계
 
-### 4. 고객 문의 섹션
+### 4. PDF 업로드 및 결제 다운로드
+- PDF 파일 업로드 (드래그 앤 드롭 지원)
+- 토스페이먼츠(Toss Payments) 결제 시스템 연동
+- 결제 후 즉시 다운로드
+- 파일 크기 제한 (10MB)
+- PDF 파일만 허용
+
+### 5. 고객 문의 섹션
 - 성명, 이메일, 전화번호, 문의 내용 입력 필드
 - 실시간 폼 유효성 검사
 - 전화번호 자동 포맷팅
@@ -127,6 +134,151 @@ php -S localhost:8000
 ### 텍스트 수정
 `index.html` 파일에서 직접 텍스트를 수정할 수 있습니다.
 
+## 💳 토스페이먼츠(Toss Payments) 결제 시스템 설정
+
+### 1. 토스페이먼츠 가입 및 클라이언트 키 발급
+
+1. [토스페이먼츠 홈페이지](https://developers.tosspayments.com/)에 접속
+2. 무료 회원가입 (이메일 또는 전화번호)
+3. 내 프로젝트 → 새 프로젝트 만들기
+4. 프로젝트 설정 → **클라이언트 키** 복사
+5. `script.js` 파일 422번째 줄 수정:
+
+```javascript
+const tossPayments = TossPayments('test_ck_YOUR_KEY_HERE'); // 본인의 클라이언트 키로 변경
+```
+
+### 2. 테스트 결제 (매우 간단!)
+
+토스페이먼츠는 완벽한 테스트 모드를 제공합니다:
+
+**테스트 카드 정보:**
+- 카드번호: `1234-5678-9012-3456`
+- 유효기간: `12/34`
+- CVC: `123`
+- 비밀번호: `123456`
+
+**다른 테스트 카드:**
+- ✅ 성공: `1234-5678-9012-3456`
+- ❌ 실패: `4000-0000-0000-0002`
+- 🔒 3D Secure: `4000-0025-0000-3155`
+
+### 3. 토스페이먼츠의 장점
+
+✅ **한국 최고의 결제 시스템** - 가장 많이 사용됨
+✅ **매우 간단한 설정** - 3분이면 완료
+✅ **완벽한 테스트 모드** - 실제 결제 없이 테스트 가능
+✅ **한국 카드 전부 지원** - 삼성카드, 신한카드, KB카드 등
+✅ **무료로 시작** - 거래 수수료만 지불 (3.6% + 100원)
+✅ **우수한 한국어 문서** - 매우 친절한 가이드
+✅ **빠른 승인** - 1-2일이면 승인 완료
+✅ **다양한 결제 수단** - 카드, 계좌이체, 가상계좌, 휴대폰 소액결제
+
+### 4. 실제 운영 시 설정
+
+⚠️ **중요**: 실제 운영 시에는 다음 사항을 구현해야 합니다:
+
+1. **서버 사이드 결제 검증** (필수)
+2. **결제 정보 데이터베이스 저장**
+3. **환불 처리 기능**
+4. **웹훅(Webhook) 설정** - 결제 완료 알림
+5. **HTTPS 필수**
+
+### 5. 서버 사이드 구현 예시 (Node.js)
+
+```javascript
+// server.js
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+app.use(express.json());
+
+// 결제 검증
+app.post('/verify-payment', async (req, res) => {
+    const { orderId, amount, paymentKey } = req.body;
+    
+    // 토스페이먼츠 API로 결제 검증
+    const response = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Basic ' + Buffer.from('test_sk_xxx:').toString('base64'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            paymentKey,
+            orderId,
+            amount
+        })
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 'DONE') {
+        // 결제 성공
+        res.json({ success: true, payment: result });
+    } else {
+        // 결제 실패
+        res.json({ success: false, error: result.message });
+    }
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
+```
+
+### 6. 클라이언트에서 서버 호출
+
+```javascript
+// script.js 수정
+async function requestPayment() {
+    const tossPayments = TossPayments('test_ck_YOUR_KEY');
+    
+    try {
+        await tossPayments.requestPayment('카드', {
+            amount: 5000,
+            orderId: 'order_' + new Date().getTime(),
+            orderName: uploadedPdfFile.name,
+            customerName: '구매자',
+            successUrl: 'http://localhost:3000/verify-payment',
+            failUrl: 'http://localhost:3000/payment-fail',
+        });
+    } catch (err) {
+        console.error('Error:', err);
+    }
+}
+```
+
+### 7. 웹훅(Webhook) 설정
+
+실제 운영 시 결제 완료 알림을 받으려면:
+
+```javascript
+// server.js
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    const signature = req.headers['x-toss-signature'];
+    const webhookSecret = 'YOUR_WEBHOOK_SECRET';
+    
+    const hash = crypto
+        .createHmac('sha512', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('base64');
+    
+    if (signature === hash) {
+        // 웹훅 검증 성공
+        const event = req.body;
+        
+        if (event.type === 'PAYMENT_CONFIRMED') {
+            // 결제 완료 처리
+            console.log('결제 완료:', event.data);
+        }
+        
+        res.json({ received: true });
+    } else {
+        res.status(400).json({ error: 'Invalid signature' });
+    }
+});
+```
+
 ## 📞 연락처 정보
 
 웹사이트에 표시된 연락처 정보는 예시입니다. 실제 정보로 변경하세요:
@@ -145,5 +297,5 @@ php -S localhost:8000
 
 ---
 
-**K& Partner** - Your Starting Partner 🚀
+**K&Partners** - Your Starting Partner 🚀
 
