@@ -144,7 +144,8 @@ if (contactForm) {
         };
 
         // Validation
-        if (validateForm(formData)) {
+        const validation = validateForm(formData);
+        if (validation.valid) {
             try {
                 // 이메일 발송
                 await sendEmail(formData);
@@ -166,30 +167,39 @@ if (contactForm) {
                 showNotification('문의 전송 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
             }
         } else {
-            showNotification('모든 필드를 올바르게 입력해주세요.', 'error');
+            // 상세한 에러 메시지 표시
+            const errorMessage = validation.errors.length > 0 
+                ? validation.errors.join(' ')
+                : '모든 필드를 올바르게 입력해주세요.';
+            showNotification(errorMessage, 'error');
         }
     });
 }
 
 // Form Validation
 function validateForm(data) {
+    const errors = [];
+    
     // Name validation
-    if (!data.name || data.name.length < 2) {
-        return false;
+    if (!data.name || data.name.trim().length < 2) {
+        errors.push('성명을 2글자 이상 입력해주세요.');
+        return { valid: false, errors };
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!data.email || !emailRegex.test(data.email)) {
-        return false;
+        errors.push('올바른 이메일 주소를 입력해주세요.');
+        return { valid: false, errors };
     }
 
-    // Message validation
-    if (!data.message || data.message.length < 10) {
-        return false;
+    // Message validation (최소 5글자로 완화)
+    if (!data.message || data.message.trim().length < 5) {
+        errors.push('문의 내용을 5글자 이상 입력해주세요.');
+        return { valid: false, errors };
     }
 
-    return true;
+    return { valid: true, errors: [] };
 }
 
 // ============================================
