@@ -397,9 +397,8 @@ body {
 }
 
 .animate-slide-up {
-    animation: slideUp 0.8s ease-out forwards;
+    animation: blurFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
-    transform: translateY(30px);
 }
 
 .delay-1 { animation-delay: 0.2s; }
@@ -421,13 +420,15 @@ body {
     }
 }
 
-@keyframes slideUp {
+@keyframes blurFadeIn {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        filter: blur(20px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
+        filter: blur(0);
         transform: translateY(0);
     }
 }
@@ -624,6 +625,234 @@ section {
 .card-link:hover {
     gap: var(--spacing-sm);
     color: var(--color-primary-light);
+}
+
+/* ============================================
+   Consultant Section
+   ============================================ */
+
+.consultant-wrapper {
+    position: relative;
+    z-index: 2;
+}
+
+.consultant-profile {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-3xl);
+    backdrop-filter: blur(20px);
+    transition: all var(--transition-base);
+}
+
+.consultant-profile:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-light);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.profile-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-icon::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+.profile-icon svg {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-intro {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: var(--spacing-xs);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.profile-tagline {
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.experience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.experience-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    backdrop-filter: blur(20px);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-start;
+}
+
+.experience-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--color-primary), var(--color-secondary));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.experience-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-light);
+    box-shadow: var(--shadow-lg);
+}
+
+.experience-card:hover::before {
+    opacity: 1;
+}
+
+.exp-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.exp-icon svg {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.exp-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    transition: opacity var(--transition-base);
+}
+
+.exp-icon::after {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.experience-card:hover .exp-icon::after {
+    opacity: 1;
+    animation: shimmer 2s infinite;
+}
+
+/* Icon color variations */
+.exp-icon.career {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.exp-icon.fintech {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+}
+
+.exp-icon.ceo {
+    background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+.exp-icon.startup {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.exp-icon.creator {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.exp-icon.education {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+}
+
+.exp-icon.media {
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+}
+
+.exp-icon.mentor {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+}
+
+.exp-icon.author {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.exp-content {
+    flex: 1;
+}
+
+.exp-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text-primary);
+}
+
+.exp-description {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
 }
 
 /* ============================================
@@ -964,6 +1193,19 @@ section {
         grid-template-columns: 1fr;
     }
     
+    .experience-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-icon {
+        margin: 0 auto;
+    }
+    
     .form-row {
         grid-template-columns: 1fr;
     }
@@ -999,5 +1241,22 @@ section {
     
     .section-title {
         font-size: 2rem;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .exp-title {
+        font-size: 1.125rem;
+    }
+    
+    .experience-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .exp-icon {
+        margin: 0 auto;
     }
 }
