@@ -21,8 +21,8 @@
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#home" class="nav-link">홈</a></li>
                 <li><a href="#services" class="nav-link">서비스</a></li>
-                <li><a href="#board" class="nav-link">게시판</a></li>
                 <li><a href="#podcast" class="nav-link">팟캐스트</a></li>
+                <li><a href="#board" class="nav-link">게시판</a></li>
                 <li><a href="#consultant" class="nav-link">컨설턴트 소개</a></li>
                 <li><a href="#contact" class="nav-link">문의하기</a></li>
                 <li><a href="#contact" class="nav-link nav-cta">상담 신청</a></li>
@@ -163,39 +163,6 @@
         </div>
     </section>
 
-    <!-- Board Section -->
-    <section id="board" class="board">
-        <div class="section-background">
-            <img src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80" alt="Board Background" class="section-bg-image board-bg-image">
-            <div class="section-overlay board-overlay"></div>
-        </div>
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">Board</div>
-                <h2 class="section-title">공지 & 인사이트</h2>
-                <p class="section-description">새로운 소식과 인사이트를 게시판에서 확인하세요. 최신 글은 “New” 배지와 함께 상단에 표시됩니다.</p>
-            </div>
-            <div class="board-layout">
-                <div id="boardList" class="board-list">
-                    <div class="board-empty">
-                        <div class="board-empty-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
-                            </svg>
-                        </div>
-                        <p>등록된 게시글을 불러오는 중입니다...</p>
-                    </div>
-                </div>
-                <div id="boardDetail" class="board-detail board-detail-empty">
-                    <div class="board-detail-placeholder">
-                        <h3>게시글을 선택해주세요</h3>
-                        <p>목록에서 게시글을 선택하면 제목, 본문, 첨부 링크와 댓글을 확인할 수 있습니다.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Podcast Section -->
     <section id="podcast" class="podcast">
         <div class="section-background">
@@ -217,6 +184,65 @@
                         </svg>
                     </div>
                     <p>팟캐스트 목록을 불러오는 중입니다...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Board Section -->
+    <section id="board" class="board">
+        <div class="section-background">
+            <img src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1600&q=80" alt="Board Background" class="section-bg-image board-bg-image">
+            <div class="section-overlay board-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Board</div>
+                <h2 class="section-title">공지 & 인사이트</h2>
+                <p id="boardSectionDescription" class="section-description">최근 소식과 공지를 게시판에서 확인하세요. 새로운 글은 “New” 배지와 함께 표시되며, 제목을 클릭하면 상세 내용을 바로 확인할 수 있습니다.</p>
+            </div>
+            <div class="board-layout">
+                <div class="board-list">
+                    <div class="board-table-wrapper">
+                        <table class="board-table" aria-describedby="boardSectionDescription">
+                            <colgroup>
+                                <col class="board-col-number">
+                                <col class="board-col-title">
+                                <col class="board-col-author">
+                                <col class="board-col-date">
+                                <col class="board-col-views">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">제목</th>
+                                    <th scope="col">글쓴이</th>
+                                    <th scope="col">날짜</th>
+                                    <th scope="col">조회수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boardTableBody">
+                                <tr class="board-table-empty">
+                                    <td colspan="5">
+                                        <div class="board-empty">
+                                            <div class="board-empty-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
+                                                </svg>
+                                            </div>
+                                            <p>게시글을 불러오는 중입니다...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="boardDetail" class="board-detail board-detail-empty">
+                    <div class="board-detail-placeholder">
+                        <h3>게시글을 선택해주세요</h3>
+                        <p>목록에서 게시글을 선택하면 제목, 본문, 첨부 링크와 댓글을 확인할 수 있습니다.</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -12,6 +12,7 @@ const fileInput = document.getElementById('episodeFile');
 const boardForm = document.getElementById('boardPostForm');
 const boardStatusBox = document.getElementById('boardStatus');
 const boardTitleInput = document.getElementById('boardTitle');
+const boardAuthorInput = document.getElementById('boardAuthor');
 const boardSummaryInput = document.getElementById('boardSummary');
 const boardContentInput = document.getElementById('boardContent');
 const boardLinksInput = document.getElementById('boardLinks');
@@ -260,6 +261,7 @@ if (boardForm) {
 
         const title = boardTitleInput.value.trim();
         const content = boardContentInput.value.trim();
+        const author = boardAuthorInput ? boardAuthorInput.value.trim() : '';
         const summary = boardSummaryInput.value.trim();
         const rawLinks = boardLinksInput.value;
         const imageFiles = Array.from(boardImagesInput.files || []);
@@ -295,6 +297,7 @@ if (boardForm) {
             await uploadBoardPost({
                 password: adminPassword,
                 title,
+                author,
                 summary,
                 content,
                 links: parseLinksInput(rawLinks),
@@ -302,6 +305,10 @@ if (boardForm) {
             });
         } catch (error) {
             setStatus(boardStatusBox, error.message || '이미지 처리 중 문제가 발생했습니다.', 'error');
+        } finally {
+            if (boardAuthorInput && !boardAuthorInput.value.trim()) {
+                boardAuthorInput.value = '관리자';
+            }
         }
     });
 }

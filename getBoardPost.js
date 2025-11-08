@@ -1,4 +1,4 @@
-const { get } = require('@vercel/blob');
+const { get, put } = require('@vercel/blob');
 
 async function readJson(path) {
     try {
@@ -17,6 +17,19 @@ async function readJson(path) {
         }
         console.error('[getBoardPost] Failed to read JSON:', path, error.message);
         return null;
+    }
+}
+
+async function writeJson(path, data) {
+    try {
+        await put(path, JSON.stringify(data, null, 2), {
+            access: 'public',
+            addRandomSuffix: false,
+            contentType: 'application/json',
+        });
+    } catch (error) {
+        console.error('[getBoardPost] Failed to write JSON:', path, error.message);
+        throw error;
     }
 }
 
@@ -39,10 +52,26 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Missing post id' });
     }
 
+    const postPath = `board/${id}/post.json`;
+
     try {
-        const post = await readJson(`board/${id}/post.json`);
+        const post = await readJson(postPath);
         if (!post) {
             return res.status(404).json({ error: 'Post not found' });
+        }
+
+        try {
+            const currentViews = typeof post.views === 'number'
+                ? post.views
+                : Number.parseInt(post.views, 10) || 0;
+            const updatedPost = {
+                ...post,
+                views: currentViews + 1,
+            };
+            await writeJson(postPath, updatedPost);
+            post.views = updatedPost.views;
+        } catch (viewError) {
+            console.error('[getBoardPost] Failed to update view count:', viewError.message);
         }
 
         const commentsData = await readJson(`board/${id}/comments.json`);

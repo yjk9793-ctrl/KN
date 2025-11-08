@@ -87,6 +87,7 @@ module.exports = async (req, res) => {
         title,
         content,
         summary,
+        author,
         links = [],
         images = [],
     } = body;
@@ -104,6 +105,9 @@ module.exports = async (req, res) => {
     }
 
     const normalizedLinks = normalizeLinks(links);
+    const cleanAuthor = author && typeof author === 'string' && author.trim().length > 0
+        ? author.trim()
+        : '관리자';
 
     if (!Array.isArray(images)) {
         return res.status(400).json({ error: '이미지 형식이 올바르지 않습니다.' });
@@ -146,6 +150,8 @@ module.exports = async (req, res) => {
             title: title.trim(),
             summary: summary && typeof summary === 'string' ? summary.trim() : '',
             content: content.trim(),
+            author: cleanAuthor,
+            views: 0,
             links: normalizedLinks,
             images: imageEntries,
             createdAt: timestamp,

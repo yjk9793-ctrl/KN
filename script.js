@@ -11,7 +11,7 @@ const contactForm = document.getElementById('contactForm');
 const pdfFileInput = document.getElementById('pdfFileInput');
 const uploadArea = document.getElementById('uploadArea');
 const filesList = document.getElementById('filesList');
-const boardListContainer = document.getElementById('boardList');
+const boardTableBody = document.getElementById('boardTableBody');
 const boardDetailContainer = document.getElementById('boardDetail');
 const podcastList = document.getElementById('podcastList');
 
@@ -698,20 +698,26 @@ async function loadPodcasts() {
 // Board Rendering & Interactions
 // ============================================
 
+// (reimplemented board logic below)
+
 let boardPostsCache = [];
 let currentBoardPostId = null;
 
 function renderBoardListEmpty(message) {
-    if (!boardListContainer) return;
-    boardListContainer.innerHTML = `
-        <div class="board-empty">
-            <div class="board-empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
-                </svg>
-            </div>
-            <p>${message}</p>
-        </div>
+    if (!boardTableBody) return;
+    boardTableBody.innerHTML = `
+        <tr class="board-table-empty">
+            <td colspan="5">
+                <div class="board-empty">
+                    <div class="board-empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
+                        </svg>
+                    </div>
+                    <p>${message}</p>
+                </div>
+            </td>
+        </tr>
     `;
 }
 
@@ -731,6 +737,19 @@ function formatBoardDate(isoDate) {
     }
 }
 
+function formatBoardListDate(isoDate) {
+    try {
+        if (!isoDate) return '';
+        const date = new Date(isoDate);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}.${month}.${day}`;
+    } catch (error) {
+        return '';
+    }
+}
+
 function escapeHtml(value) {
     if (!value) return '';
     return value
@@ -745,40 +764,45 @@ function formatBoardContent(content) {
     return escapeHtml(content).replace(/\n/g, '<br>');
 }
 
-function renderBoardList(posts) {
-    if (!boardListContainer) return;
+function normalizeViews(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+    }
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
 
-    boardListContainer.innerHTML = '';
+function renderBoardList(posts) {
+    if (!boardTableBody) return;
 
     if (!posts || posts.length === 0) {
         renderBoardListEmpty('등록된 게시글이 아직 없습니다. 관리자 페이지에서 새로운 글을 등록해주세요.');
         return;
     }
 
+    boardTableBody.innerHTML = '';
+
     posts.forEach((post) => {
-        const item = document.createElement('article');
-        item.className = 'board-item';
-        item.dataset.id = post.id;
-        item.innerHTML = `
-            <div class="board-item-header">
-                <h3 class="board-item-title">${escapeHtml(post.title)}</h3>
-                ${post.isNew ? '<span class="board-badge">New</span>' : ''}
-            </div>
-            <div class="board-item-meta">
-                <time>${formatBoardDate(post.createdAt)}</time>
-                <div class="board-item-attachments">
-                    ${post.attachments.images ? `<span class="board-attachment board-attachment--image">${post.attachments.images} 이미지</span>` : ''}
-                    ${post.attachments.links ? `<span class="board-attachment board-attachment--link">${post.attachments.links} 링크</span>` : ''}
-                </div>
-            </div>
-            ${post.summary ? `<p class="board-item-summary">${escapeHtml(post.summary)}</p>` : ''}
+        const views = normalizeViews(post.views);
+        const row = document.createElement('tr');
+        row.className = 'board-row';
+        row.dataset.id = post.id;
+        row.innerHTML = `
+            <td class="board-cell-number">${post.number}</td>
+            <td class="board-cell-title">
+                <span class="board-title-text">${escapeHtml(post.title)}</span>
+                ${post.isNew ? '<span class="board-badge board-badge--inline">New</span>' : ''}
+            </td>
+            <td class="board-cell-author">${escapeHtml(post.author || '관리자')}</td>
+            <td class="board-cell-date">${formatBoardListDate(post.createdAt)}</td>
+            <td class="board-cell-views">${views.toLocaleString('ko-KR')}</td>
         `;
 
         if (post.id === currentBoardPostId) {
-            item.classList.add('active');
+            row.classList.add('active');
         }
 
-        boardListContainer.appendChild(item);
+        boardTableBody.appendChild(row);
     });
 }
 
@@ -863,6 +887,8 @@ function renderBoardDetail(post, comments = []) {
     const hasImages = Array.isArray(post.images) && post.images.length > 0;
     const hasLinks = Array.isArray(post.links) && post.links.length > 0;
     const commentTree = buildCommentsTree(comments);
+    const authorLabel = escapeHtml(post.author || '관리자');
+    const viewCount = normalizeViews(post.views).toLocaleString('ko-KR');
 
     boardDetailContainer.innerHTML = `
         <article class="board-article">
@@ -870,8 +896,10 @@ function renderBoardDetail(post, comments = []) {
                 <div>
                     <h3 class="board-detail-title">${escapeHtml(post.title)}</h3>
                     <div class="board-detail-meta">
+                        <span class="board-detail-author">${authorLabel}</span>
                         <time>${formatBoardDate(post.createdAt)}</time>
                         ${post.updatedAt && post.updatedAt !== post.createdAt ? `<span class="board-detail-updated">업데이트: ${formatBoardDate(post.updatedAt)}</span>` : ''}
+                        <span class="board-detail-views">조회 ${viewCount}</span>
                     </div>
                 </div>
             </header>
@@ -929,6 +957,21 @@ function renderBoardDetail(post, comments = []) {
     `;
 }
 
+function updateBoardRow(post) {
+    if (!boardTableBody) return;
+    const views = normalizeViews(post.views);
+    boardPostsCache = boardPostsCache.map((item) => (
+        item.id === post.id ? { ...item, views } : item
+    ));
+    const row = boardTableBody.querySelector(`tr.board-row[data-id="${post.id}"]`);
+    if (row) {
+        const viewsCell = row.querySelector('.board-cell-views');
+        if (viewsCell) {
+            viewsCell.textContent = views.toLocaleString('ko-KR');
+        }
+    }
+}
+
 async function fetchBoardDetail(postId) {
     if (!postId) return;
 
@@ -941,6 +984,7 @@ async function fetchBoardDetail(postId) {
             throw new Error('게시글을 불러오지 못했습니다.');
         }
         const data = await response.json();
+        updateBoardRow(data.post);
         renderBoardDetail(data.post, data.comments);
         highlightActiveBoardItem(postId);
     } catch (error) {
@@ -950,18 +994,18 @@ async function fetchBoardDetail(postId) {
 }
 
 function highlightActiveBoardItem(postId) {
-    if (!boardListContainer) return;
-    boardListContainer.querySelectorAll('.board-item').forEach((item) => {
-        if (item.dataset.id === postId) {
-            item.classList.add('active');
+    if (!boardTableBody) return;
+    boardTableBody.querySelectorAll('tr.board-row').forEach((row) => {
+        if (row.dataset.id === postId) {
+            row.classList.add('active');
         } else {
-            item.classList.remove('active');
+            row.classList.remove('active');
         }
     });
 }
 
 async function loadBoardPosts() {
-    if (!boardListContainer) return;
+    if (!boardTableBody) return;
 
     renderBoardListEmpty('게시글 목록을 불러오는 중입니다...');
 
@@ -1009,11 +1053,11 @@ async function submitBoardComment({ postId, content, password, parentId = null }
     return result.comment;
 }
 
-if (boardListContainer) {
-    boardListContainer.addEventListener('click', (event) => {
-        const item = event.target.closest('.board-item');
-        if (!item) return;
-        const postId = item.dataset.id;
+if (boardTableBody) {
+    boardTableBody.addEventListener('click', (event) => {
+        const row = event.target.closest('tr.board-row');
+        if (!row) return;
+        const postId = row.dataset.id;
         if (!postId || postId === currentBoardPostId) return;
         fetchBoardDetail(postId);
     });
