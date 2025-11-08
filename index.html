@@ -199,48 +199,88 @@
             <div class="section-header">
                 <div class="section-badge">Board</div>
                 <h2 class="section-title">게시판</h2>
-                <p id="boardSectionDescription" class="section-description">최근 소식과 공지를 게시판에서 확인하세요. 새로운 글은 “New” 배지와 함께 표시되며, 제목을 클릭하면 아래에서 상세 내용을 바로 확인할 수 있습니다.</p>
+                <p id="boardSectionDescription" class="section-description">최신 공지와 인사이트를 확인하세요. 검색과 필터를 활용해 원하는 정보를 빠르게 찾아볼 수 있습니다.</p>
             </div>
-            <div class="board-layout">
-                <div class="board-table-wrapper">
-                    <table class="board-table" aria-describedby="boardSectionDescription">
-                        <colgroup>
-                            <col class="board-col-number">
-                            <col class="board-col-title">
-                            <col class="board-col-author">
-                            <col class="board-col-date">
-                            <col class="board-col-views">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th scope="col">번호</th>
-                                <th scope="col">제목</th>
-                                <th scope="col">글쓴이</th>
-                                <th scope="col">날짜</th>
-                                <th scope="col">조회수</th>
-                            </tr>
-                        </thead>
-                        <tbody id="boardTableBody">
-                            <tr class="board-table-empty">
-                                <td colspan="5">
-                                    <div class="board-empty">
-                                        <div class="board-empty-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
-                                            </svg>
-                                        </div>
-                                        <p>게시글을 불러오는 중입니다...</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="boardDetail" class="board-detail board-detail-empty">
-                    <div class="board-detail-placeholder">
-                        <h3>게시글을 선택해주세요</h3>
-                        <p>목록에서 게시글을 선택하면 제목, 본문, 첨부 링크와 댓글을 확인할 수 있습니다.</p>
+            <div class="board-surface">
+                <div class="board-summary" aria-label="게시판 요약 통계">
+                    <div class="board-summary-card">
+                        <span class="board-summary-label">전체 게시글</span>
+                        <strong id="boardTotalCount" class="board-summary-value">0</strong>
+                        <span class="board-summary-sub">등록된 모든 게시글 수</span>
                     </div>
+                    <div class="board-summary-card">
+                        <span class="board-summary-label">새로운 글</span>
+                        <strong id="boardNewCount" class="board-summary-value">0</strong>
+                        <span class="board-summary-sub">최근 72시간 내 게시</span>
+                    </div>
+                    <div class="board-summary-card">
+                        <span class="board-summary-label">누적 조회</span>
+                        <strong id="boardViewCount" class="board-summary-value">0</strong>
+                        <span class="board-summary-sub">모든 게시글 조회 합계</span>
+                    </div>
+                </div>
+
+                <div class="board-controls" role="toolbar" aria-label="게시판 검색 및 필터">
+                    <div class="board-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input
+                            type="search"
+                            id="boardSearchInput"
+                            class="board-search-input"
+                            placeholder="제목, 요약 또는 작성자로 검색"
+                            aria-label="게시글 검색"
+                        >
+                    </div>
+                    <div class="board-filters" role="group" aria-label="게시글 필터">
+                        <button type="button" class="board-filter-button active" data-filter="all">전체</button>
+                        <button type="button" class="board-filter-button" data-filter="new">최신</button>
+                    </div>
+                </div>
+
+                <div class="board-content">
+                    <div class="board-table-wrapper">
+                        <table class="board-table" aria-describedby="boardSectionDescription">
+                            <colgroup>
+                                <col class="board-col-number">
+                                <col class="board-col-title">
+                                <col class="board-col-author">
+                                <col class="board-col-date">
+                                <col class="board-col-views">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">제목</th>
+                                    <th scope="col">작성자</th>
+                                    <th scope="col">작성일</th>
+                                    <th scope="col">조회수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boardTableBody">
+                                <tr class="board-table-empty">
+                                    <td colspan="5">
+                                        <div class="board-empty">
+                                            <div class="board-empty-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
+                                                </svg>
+                                            </div>
+                                            <p>게시글을 불러오는 중입니다...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <aside id="boardDetail" class="board-detail board-detail-empty" aria-live="polite">
+                        <div class="board-detail-placeholder">
+                            <h3>게시글을 선택해주세요</h3>
+                            <p>목록에서 게시글을 선택하면 제목, 본문, 첨부 자료와 댓글을 확인할 수 있습니다.</p>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>

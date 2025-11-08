@@ -13,6 +13,11 @@ const uploadArea = document.getElementById('uploadArea');
 const filesList = document.getElementById('filesList');
 const boardTableBody = document.getElementById('boardTableBody');
 const boardDetailContainer = document.getElementById('boardDetail');
+const boardTotalCount = document.getElementById('boardTotalCount');
+const boardNewCount = document.getElementById('boardNewCount');
+const boardViewCount = document.getElementById('boardViewCount');
+const boardSearchInput = document.getElementById('boardSearchInput');
+const boardFilterButtons = document.querySelectorAll('.board-filter-button');
 const podcastList = document.getElementById('podcastList');
 
 // ============================================
@@ -698,28 +703,10 @@ async function loadPodcasts() {
 // Board Rendering & Interactions
 // ============================================
 
-// (reimplemented board logic below)
-
 let boardPostsCache = [];
 let currentBoardPostId = null;
-
-function renderBoardListEmpty(message) {
-    if (!boardTableBody) return;
-    boardTableBody.innerHTML = `
-        <tr class="board-table-empty">
-            <td colspan="5">
-                <div class="board-empty">
-                    <div class="board-empty-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
-                        </svg>
-                    </div>
-                    <p>${message}</p>
-                </div>
-            </td>
-        </tr>
-    `;
-}
+let boardActiveFilter = 'all';
+let boardSearchTerm = '';
 
 function formatBoardDate(isoDate) {
     try {
@@ -772,38 +759,33 @@ function normalizeViews(value) {
     return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function renderBoardList(posts) {
+function updateBoardSummary() {
+    if (!boardTotalCount || !boardNewCount || !boardViewCount) return;
+    const totalCount = boardPostsCache.length;
+    const newCount = boardPostsCache.filter((post) => post.isNew).length;
+    const totalViews = boardPostsCache.reduce((sum, post) => sum + normalizeViews(post.views), 0);
+
+    boardTotalCount.textContent = totalCount.toLocaleString('ko-KR');
+    boardNewCount.textContent = newCount.toLocaleString('ko-KR');
+    boardViewCount.textContent = totalViews.toLocaleString('ko-KR');
+}
+
+function renderBoardListEmpty(message) {
     if (!boardTableBody) return;
-
-    if (!posts || posts.length === 0) {
-        renderBoardListEmpty('등록된 게시글이 아직 없습니다. 관리자 페이지에서 새로운 글을 등록해주세요.');
-        return;
-    }
-
-    boardTableBody.innerHTML = '';
-
-    posts.forEach((post) => {
-        const views = normalizeViews(post.views);
-        const row = document.createElement('tr');
-        row.className = 'board-row';
-        row.dataset.id = post.id;
-        row.innerHTML = `
-            <td class="board-cell-number">${post.number}</td>
-            <td class="board-cell-title">
-                <span class="board-title-text">${escapeHtml(post.title)}</span>
-                ${post.isNew ? '<span class="board-badge board-badge--inline">New</span>' : ''}
+    boardTableBody.innerHTML = `
+        <tr class="board-table-empty">
+            <td colspan="5">
+                <div class="board-empty">
+                    <div class="board-empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
+                        </svg>
+                    </div>
+                    <p>${message}</p>
+                </div>
             </td>
-            <td class="board-cell-author">${escapeHtml(post.author || '관리자')}</td>
-            <td class="board-cell-date">${formatBoardListDate(post.createdAt)}</td>
-            <td class="board-cell-views">${views.toLocaleString('ko-KR')}</td>
-        `;
-
-        if (post.id === currentBoardPostId) {
-            row.classList.add('active');
-        }
-
-        boardTableBody.appendChild(row);
-    });
+        </tr>
+    `;
 }
 
 function setBoardDetailLoading() {
@@ -894,7 +876,7 @@ function renderBoardDetail(post, comments = []) {
         <article class="board-article">
             <header class="board-detail-header">
                 <div>
-                    <h3 class="board-detail-title">${escapeHtml(post.title)}</h3>
+                    <h3 id="boardModalTitle" class="board-detail-title">${escapeHtml(post.title)}</h3>
                     <div class="board-detail-meta">
                         <span class="board-detail-author">${authorLabel}</span>
                         <time>${formatBoardDate(post.createdAt)}</time>
@@ -955,6 +937,7 @@ function renderBoardDetail(post, comments = []) {
             </section>
         </article>
     `;
+    boardDetailContainer.scrollTop = 0;
 }
 
 function updateBoardRow(post) {
@@ -963,19 +946,115 @@ function updateBoardRow(post) {
     boardPostsCache = boardPostsCache.map((item) => (
         item.id === post.id ? { ...item, views } : item
     ));
-    const row = boardTableBody.querySelector(`tr.board-row[data-id="${post.id}"]`);
-    if (row) {
-        const viewsCell = row.querySelector('.board-cell-views');
-        if (viewsCell) {
-            viewsCell.textContent = views.toLocaleString('ko-KR');
-        }
+    updateBoardSummary();
+    highlightActiveBoardItem(currentBoardPostId);
+}
+
+function highlightActiveBoardItem(postId) {
+    if (!boardTableBody) return;
+    boardTableBody.querySelectorAll('tr.board-row').forEach((row) => {
+        const isActive = postId && row.dataset.id === postId;
+        row.classList.toggle('active', isActive);
+        row.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+}
+
+function resetBoardDetailPlaceholder() {
+    if (!boardDetailContainer) return;
+    boardDetailContainer.classList.add('board-detail-empty');
+    boardDetailContainer.innerHTML = `
+        <div class="board-detail-placeholder">
+            <h3>게시글을 선택해주세요</h3>
+            <p>목록에서 게시글을 선택하면 제목, 본문, 첨부 자료와 댓글을 확인할 수 있습니다.</p>
+        </div>
+    `;
+}
+
+function renderBoardList(posts) {
+    if (!boardTableBody) return;
+
+    if (!posts || posts.length === 0) {
+        renderBoardListEmpty('조건에 맞는 게시글이 없습니다.');
+        highlightActiveBoardItem(null);
+        return;
+    }
+
+    const rowsMarkup = posts.map((post) => {
+        const isActive = post.id === currentBoardPostId;
+        const views = normalizeViews(post.views).toLocaleString('ko-KR');
+        const summary = post.summary ? `<span class="board-table-summary">${escapeHtml(post.summary)}</span>` : '';
+
+        return `
+            <tr class="board-row${isActive ? ' active' : ''}" data-id="${post.id}" aria-selected="${isActive ? 'true' : 'false'}" tabindex="0">
+                <td class="board-cell-number">#${post.number}</td>
+                <td class="board-cell-title">
+                    <span class="board-cell-title-text">${escapeHtml(post.title)}</span>
+                    ${post.isNew ? '<span class="board-badge board-badge--inline">New</span>' : ''}
+                    ${summary}
+                </td>
+                <td class="board-cell-author">${escapeHtml(post.author || '관리자')}</td>
+                <td class="board-cell-date">${formatBoardListDate(post.createdAt)}</td>
+                <td class="board-cell-views">${views}</td>
+            </tr>
+        `;
+    }).join('');
+
+    boardTableBody.innerHTML = rowsMarkup;
+}
+
+function applyBoardFilters({ maintainSelection = true } = {}) {
+    let filtered = [...boardPostsCache];
+
+    if (boardActiveFilter === 'new') {
+        filtered = filtered.filter((post) => post.isNew);
+    }
+
+    if (boardSearchTerm) {
+        const term = boardSearchTerm;
+        filtered = filtered.filter((post) => {
+            const values = [
+                post.title,
+                post.summary,
+                post.author,
+            ].filter(Boolean).join(' ').toLowerCase();
+            return values.includes(term);
+        });
+    }
+
+    if (filtered.length === 0) {
+        const emptyMessage = boardPostsCache.length === 0
+            ? '등록된 게시글이 아직 없습니다. 관리자 페이지에서 새로운 글을 등록해주세요.'
+            : '조건에 맞는 게시글이 없습니다.';
+        renderBoardListEmpty(emptyMessage);
+        currentBoardPostId = null;
+        resetBoardDetailPlaceholder();
+        return;
+    }
+
+    renderBoardList(filtered);
+
+    if (maintainSelection && currentBoardPostId && filtered.some((post) => post.id === currentBoardPostId)) {
+        highlightActiveBoardItem(currentBoardPostId);
+        return;
+    }
+
+    currentBoardPostId = filtered[0]?.id || null;
+
+    if (currentBoardPostId) {
+        highlightActiveBoardItem(currentBoardPostId);
+        fetchBoardDetail(currentBoardPostId, { preserveSelection: true });
+    } else {
+        resetBoardDetailPlaceholder();
     }
 }
 
-async function fetchBoardDetail(postId, { scroll = true } = {}) {
+async function fetchBoardDetail(postId, { preserveSelection = false } = {}) {
     if (!postId) return;
 
-    currentBoardPostId = postId;
+    if (!preserveSelection) {
+        currentBoardPostId = postId;
+    }
+    highlightActiveBoardItem(postId);
     setBoardDetailLoading();
 
     try {
@@ -987,30 +1066,10 @@ async function fetchBoardDetail(postId, { scroll = true } = {}) {
         updateBoardRow(data.post);
         renderBoardDetail(data.post, data.comments);
         highlightActiveBoardItem(postId);
-        if (scroll && boardDetailContainer) {
-            const navigationOffset = 120;
-            const rect = boardDetailContainer.getBoundingClientRect();
-            const absoluteTop = window.pageYOffset + rect.top - navigationOffset;
-            window.scrollTo({
-                top: absoluteTop,
-                behavior: 'smooth',
-            });
-        }
     } catch (error) {
         console.error('[board] detail load failed:', error);
         renderBoardError(error.message || '게시글을 불러오는 데 실패했습니다.');
     }
-}
-
-function highlightActiveBoardItem(postId) {
-    if (!boardTableBody) return;
-    boardTableBody.querySelectorAll('tr.board-row').forEach((row) => {
-        if (row.dataset.id === postId) {
-            row.classList.add('active');
-        } else {
-            row.classList.remove('active');
-        }
-    });
 }
 
 async function loadBoardPosts() {
@@ -1025,19 +1084,10 @@ async function loadBoardPosts() {
         }
         const { posts } = await response.json();
         boardPostsCache = posts;
-        renderBoardList(posts);
-
-        if (posts.length > 0) {
-            await fetchBoardDetail(posts[0].id, { scroll: false });
-        } else if (boardDetailContainer) {
-            boardDetailContainer.classList.add('board-detail-empty');
-            boardDetailContainer.innerHTML = `
-                <div class="board-detail-placeholder">
-                    <h3>게시글이 없습니다</h3>
-                    <p>관리자 페이지에서 새로운 게시글을 등록하면 이곳에 표시됩니다.</p>
-                </div>
-            `;
-        }
+        updateBoardSummary();
+        currentBoardPostId = null;
+        resetBoardDetailPlaceholder();
+        applyBoardFilters({ maintainSelection: false });
     } catch (error) {
         console.error('[board] list load failed:', error);
         renderBoardListEmpty('게시글 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -1060,16 +1110,6 @@ async function submitBoardComment({ postId, content, password, parentId = null }
     }
 
     return result.comment;
-}
-
-if (boardTableBody) {
-    boardTableBody.addEventListener('click', (event) => {
-        const row = event.target.closest('tr.board-row');
-        if (!row) return;
-        const postId = row.dataset.id;
-        if (!postId || postId === currentBoardPostId) return;
-        fetchBoardDetail(postId);
-    });
 }
 
 if (boardDetailContainer) {
@@ -1161,7 +1201,7 @@ if (boardDetailContainer) {
             if (form.classList.contains('board-reply-form') && form.parentElement) {
                 form.parentElement.innerHTML = '';
             }
-            fetchBoardDetail(postId);
+            fetchBoardDetail(postId, { preserveSelection: true });
         } catch (error) {
             console.error('[board] comment submit failed:', error);
             showNotification(error.message || '댓글 등록에 실패했습니다.', 'error');
@@ -1171,6 +1211,45 @@ if (boardDetailContainer) {
                 submitButton.textContent = form.classList.contains('board-reply-form') ? '답글 등록' : '댓글 등록';
             }
         }
+    });
+}
+
+if (boardTableBody) {
+    boardTableBody.addEventListener('click', (event) => {
+        const row = event.target.closest('tr.board-row');
+        if (!row) return;
+        const postId = row.dataset.id;
+        if (!postId || postId === currentBoardPostId) return;
+        fetchBoardDetail(postId);
+    });
+
+    boardTableBody.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const row = event.target.closest('tr.board-row');
+        if (!row) return;
+        const postId = row.dataset.id;
+        if (!postId || postId === currentBoardPostId) return;
+        event.preventDefault();
+        fetchBoardDetail(postId);
+    });
+}
+
+if (boardSearchInput) {
+    boardSearchInput.addEventListener('input', (event) => {
+        boardSearchTerm = event.target.value.trim().toLowerCase();
+        applyBoardFilters();
+    });
+}
+
+if (boardFilterButtons.length) {
+    boardFilterButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (button.classList.contains('active')) return;
+            boardFilterButtons.forEach((btn) => btn.classList.remove('active'));
+            button.classList.add('active');
+            boardActiveFilter = button.dataset.filter || 'all';
+            applyBoardFilters({ maintainSelection: false });
+        });
     });
 }
 
