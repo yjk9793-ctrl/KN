@@ -925,7 +925,7 @@ section {
     position: relative;
     padding: 120px 0;
     overflow: hidden;
-    background: var(--color-bg-secondary);
+    background: radial-gradient(circle at top, rgba(99, 102, 241, 0.35), rgba(17, 24, 39, 0.95));
 }
 
 .podcast .container {
@@ -938,6 +938,40 @@ section {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 32px;
     margin-top: 48px;
+}
+
+.podcast-bg-image {
+    object-fit: cover;
+    filter: brightness(0.35) saturate(1.05);
+}
+
+.podcast .section-overlay {
+    background: linear-gradient(160deg, rgba(79, 70, 229, 0.55) 0%, rgba(17, 24, 39, 0.92) 60%, rgba(15, 23, 42, 0.95) 100%);
+    backdrop-filter: blur(6px);
+}
+
+.podcast .section-header {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.podcast .section-badge {
+    display: inline-block;
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(129, 140, 248, 0.45);
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.25);
+}
+
+.podcast .section-title {
+    color: #fafbff;
+    text-shadow: 0 12px 40px rgba(15, 23, 42, 0.85);
+}
+
+.podcast .section-description {
+    color: rgba(224, 231, 255, 0.85);
+    font-size: 1.05rem;
 }
 
 .podcast-card {
@@ -970,18 +1004,19 @@ section {
 
 .podcast-card-title {
     font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
+    font-weight: 700;
+    color: #f4f7ff;
+    letter-spacing: 0.015em;
 }
 
 .podcast-card-date {
     font-size: 0.875rem;
-    color: var(--color-text-tertiary);
+    color: rgba(191, 199, 245, 0.7);
 }
 
 .podcast-card-description {
     margin-bottom: 20px;
-    color: var(--color-text-secondary);
+    color: rgba(221, 226, 255, 0.88);
     line-height: 1.6;
     white-space: pre-wrap;
 }
@@ -1010,10 +1045,12 @@ section {
     align-items: center;
     gap: 16px;
     padding: 64px 32px;
-    border: 1px dashed var(--glass-border);
+    border: 1px solid rgba(99, 102, 241, 0.35);
     border-radius: var(--radius-xl);
-    color: var(--color-text-tertiary);
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-secondary);
+    background: rgba(99, 102, 241, 0.08);
+    text-align: center;
+    box-shadow: var(--shadow-md);
 }
 
 .podcast-empty-icon {
@@ -1034,6 +1071,14 @@ section {
 
     .podcast-card {
         padding: 24px;
+    }
+
+    .podcast-empty {
+        padding: 48px 24px;
+    }
+    
+    .podcast .section-description {
+        font-size: 0.95rem;
     }
 }
 

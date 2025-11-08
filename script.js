@@ -613,24 +613,28 @@ function formatEpisodeDate(isoDate) {
     }
 }
 
-function renderPodcastEpisodes(episodes) {
+function renderPodcastEmpty(message) {
     if (!podcastList) return;
-
-    podcastList.innerHTML = '';
-
-    if (!episodes || episodes.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'podcast-empty';
-        emptyState.innerHTML = `
+    podcastList.innerHTML = `
+        <div class="podcast-empty">
             <div class="podcast-empty-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="M12 6v6l4 2"></path>
                 </svg>
             </div>
-            <p>곧 새로운 에피소드가 올라올 예정입니다.</p>
-        `;
-        podcastList.appendChild(emptyState);
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function renderPodcastEpisodes(episodes) {
+    if (!podcastList) return;
+
+    podcastList.innerHTML = '';
+
+    if (!episodes || episodes.length === 0) {
+        renderPodcastEmpty('등록된 팟캐스트가 아직 없습니다. 관리자 페이지에서 새로운 에피소드를 업로드해주세요.');
         return;
     }
 
@@ -673,6 +677,8 @@ function renderPodcastEpisodes(episodes) {
 async function loadPodcasts() {
     if (!podcastList) return;
 
+    renderPodcastEmpty('팟캐스트 목록을 불러오는 중입니다...');
+
     try {
         const response = await fetch('/api/listPodcasts');
         if (!response.ok) {
@@ -682,7 +688,7 @@ async function loadPodcasts() {
         renderPodcastEpisodes(episodes);
     } catch (error) {
         console.error('[podcast] load failed:', error);
-        renderPodcastEpisodes([]);
+        renderPodcastEmpty('팟캐스트 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도하거나 관리자 페이지에서 구성을 확인해주세요.');
     }
 }
 
