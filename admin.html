@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K&Partners Podcast Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="admin.js" defer></script>
+</head>
+<body class="admin-body">
+    <main class="admin-wrapper">
+        <section class="admin-card">
+            <h1 class="admin-title">팟캐스트 관리</h1>
+            <p class="admin-subtitle">비밀번호를 입력해 업로드 도구에 접근하세요.</p>
+
+            <form id="adminLoginForm" class="admin-form">
+                <label for="adminPassword" class="admin-label">관리자 비밀번호</label>
+                <input type="password" id="adminPassword" class="admin-input" placeholder="비밀번호 입력" required>
+                <button type="submit" class="btn btn-primary admin-button">접속</button>
+                <p class="admin-helper">이 페이지는 공개되지 않으며, 비밀번호가 일치해야만 업로드 기능이 노출됩니다.</p>
+            </form>
+
+            <div id="uploadStatus" class="admin-status admin-status--info admin-hidden"></div>
+
+            <section id="uploadSection" class="admin-hidden">
+                <hr class="admin-divider">
+                <form id="podcastUploadForm" class="admin-form">
+                    <div class="admin-field">
+                        <label for="episodeTitle" class="admin-label">에피소드 제목</label>
+                        <input type="text" id="episodeTitle" class="admin-input" placeholder="예) 스타트업 팀빌딩 전략" required>
+                    </div>
+                    <div class="admin-field">
+                        <label for="episodeDescription" class="admin-label">에피소드 소개</label>
+                        <textarea id="episodeDescription" class="admin-textarea" rows="5" placeholder="에피소드에 대한 주요 내용을 입력하세요." required></textarea>
+                    </div>
+                    <div class="admin-field">
+                        <label for="episodeFile" class="admin-label">오디오 파일 업로드</label>
+                        <input type="file" id="episodeFile" class="admin-input" accept="audio/*" required>
+                        <p class="admin-helper">현재 구성은 약 4MB 이하의 파일 업로드에 최적화되어 있습니다. 더 큰 파일은 Vercel Blob 업로드 URL 방식을 고려하세요.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary admin-button">팟캐스트 업로드</button>
+                </form>
+            </section>
+        </section>
+    </main>
+</body>
+</html>
+

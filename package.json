@@ -1,0 +1,10 @@
+{
+  "name": "kn-partners",
+  "version": "1.0.0",
+  "description": "K&Partners consulting website",
+  "dependencies": {
+    "@vercel/blob": "^0.24.0",
+    "nodemailer": "^6.9.7"
+  }
+}
+

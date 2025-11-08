@@ -11,6 +11,7 @@ const contactForm = document.getElementById('contactForm');
 const pdfFileInput = document.getElementById('pdfFileInput');
 const uploadArea = document.getElementById('uploadArea');
 const filesList = document.getElementById('filesList');
+const podcastList = document.getElementById('podcastList');
 
 // ============================================
 // Navigation Functions
@@ -593,3 +594,96 @@ if (!document.querySelector('#file-card-styles')) {
     `;
     document.head.appendChild(style);
 }
+
+// ============================================
+// Podcast Rendering
+// ============================================
+
+function formatEpisodeDate(isoDate) {
+    if (!isoDate) return '';
+    try {
+        const date = new Date(isoDate);
+        return new Intl.DateTimeFormat('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }).format(date);
+    } catch (error) {
+        return '';
+    }
+}
+
+function renderPodcastEpisodes(episodes) {
+    if (!podcastList) return;
+
+    podcastList.innerHTML = '';
+
+    if (!episodes || episodes.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'podcast-empty';
+        emptyState.innerHTML = `
+            <div class="podcast-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+            </div>
+            <p>곧 새로운 에피소드가 올라올 예정입니다.</p>
+        `;
+        podcastList.appendChild(emptyState);
+        return;
+    }
+
+    episodes.forEach((episode) => {
+        const card = document.createElement('article');
+        card.className = 'podcast-card reveal';
+
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.preload = 'none';
+        audio.setAttribute('controlslist', 'nodownload noplaybackrate');
+        audio.setAttribute('disablepictureinpicture', '');
+        audio.dataset.episodeId = episode.id;
+
+        const source = document.createElement('source');
+        source.src = episode.audioUrl;
+        source.type = episode.contentType || 'audio/mpeg';
+        audio.appendChild(source);
+
+        audio.appendChild(document.createTextNode('브라우저가 오디오 태그를 지원하지 않습니다.'));
+
+        card.innerHTML = `
+            <header class="podcast-card-header">
+                <div class="podcast-card-meta">
+                    <span class="podcast-card-title">${episode.title}</span>
+                    <span class="podcast-card-date">${formatEpisodeDate(episode.createdAt)}</span>
+                </div>
+            </header>
+            <p class="podcast-card-description">${episode.description}</p>
+        `;
+
+        card.appendChild(audio);
+        podcastList.appendChild(card);
+        if (typeof revealObserver !== 'undefined') {
+            revealObserver.observe(card);
+        }
+    });
+}
+
+async function loadPodcasts() {
+    if (!podcastList) return;
+
+    try {
+        const response = await fetch('/api/listPodcasts');
+        if (!response.ok) {
+            throw new Error('팟캐스트 목록을 불러오지 못했습니다.');
+        }
+        const { episodes } = await response.json();
+        renderPodcastEpisodes(episodes);
+    } catch (error) {
+        console.error('[podcast] load failed:', error);
+        renderPodcastEpisodes([]);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadPodcasts);
