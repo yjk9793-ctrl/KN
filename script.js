@@ -972,7 +972,7 @@ function updateBoardRow(post) {
     }
 }
 
-async function fetchBoardDetail(postId) {
+async function fetchBoardDetail(postId, { scroll = true } = {}) {
     if (!postId) return;
 
     currentBoardPostId = postId;
@@ -987,6 +987,15 @@ async function fetchBoardDetail(postId) {
         updateBoardRow(data.post);
         renderBoardDetail(data.post, data.comments);
         highlightActiveBoardItem(postId);
+        if (scroll && boardDetailContainer) {
+            const navigationOffset = 120;
+            const rect = boardDetailContainer.getBoundingClientRect();
+            const absoluteTop = window.pageYOffset + rect.top - navigationOffset;
+            window.scrollTo({
+                top: absoluteTop,
+                behavior: 'smooth',
+            });
+        }
     } catch (error) {
         console.error('[board] detail load failed:', error);
         renderBoardError(error.message || '게시글을 불러오는 데 실패했습니다.');
@@ -1019,7 +1028,7 @@ async function loadBoardPosts() {
         renderBoardList(posts);
 
         if (posts.length > 0) {
-            fetchBoardDetail(posts[0].id);
+            await fetchBoardDetail(posts[0].id, { scroll: false });
         } else if (boardDetailContainer) {
             boardDetailContainer.classList.add('board-detail-empty');
             boardDetailContainer.innerHTML = `
