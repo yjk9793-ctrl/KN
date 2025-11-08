@@ -11,6 +11,8 @@ const contactForm = document.getElementById('contactForm');
 const pdfFileInput = document.getElementById('pdfFileInput');
 const uploadArea = document.getElementById('uploadArea');
 const filesList = document.getElementById('filesList');
+const boardListContainer = document.getElementById('boardList');
+const boardDetailContainer = document.getElementById('boardDetail');
 const podcastList = document.getElementById('podcastList');
 
 // ============================================
@@ -692,4 +694,434 @@ async function loadPodcasts() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadPodcasts);
+// ============================================
+// Board Rendering & Interactions
+// ============================================
+
+let boardPostsCache = [];
+let currentBoardPostId = null;
+
+function renderBoardListEmpty(message) {
+    if (!boardListContainer) return;
+    boardListContainer.innerHTML = `
+        <div class="board-empty">
+            <div class="board-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19h16M4 5h16M5 5l2 14m10-14l2 14M9 5v14m6-14v14"></path>
+                </svg>
+            </div>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function formatBoardDate(isoDate) {
+    try {
+        if (!isoDate) return '';
+        const date = new Date(isoDate);
+        return new Intl.DateTimeFormat('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(date);
+    } catch (error) {
+        return '';
+    }
+}
+
+function escapeHtml(value) {
+    if (!value) return '';
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatBoardContent(content) {
+    return escapeHtml(content).replace(/\n/g, '<br>');
+}
+
+function renderBoardList(posts) {
+    if (!boardListContainer) return;
+
+    boardListContainer.innerHTML = '';
+
+    if (!posts || posts.length === 0) {
+        renderBoardListEmpty('등록된 게시글이 아직 없습니다. 관리자 페이지에서 새로운 글을 등록해주세요.');
+        return;
+    }
+
+    posts.forEach((post) => {
+        const item = document.createElement('article');
+        item.className = 'board-item';
+        item.dataset.id = post.id;
+        item.innerHTML = `
+            <div class="board-item-header">
+                <h3 class="board-item-title">${escapeHtml(post.title)}</h3>
+                ${post.isNew ? '<span class="board-badge">New</span>' : ''}
+            </div>
+            <div class="board-item-meta">
+                <time>${formatBoardDate(post.createdAt)}</time>
+                <div class="board-item-attachments">
+                    ${post.attachments.images ? `<span class="board-attachment board-attachment--image">${post.attachments.images} 이미지</span>` : ''}
+                    ${post.attachments.links ? `<span class="board-attachment board-attachment--link">${post.attachments.links} 링크</span>` : ''}
+                </div>
+            </div>
+            ${post.summary ? `<p class="board-item-summary">${escapeHtml(post.summary)}</p>` : ''}
+        `;
+
+        if (post.id === currentBoardPostId) {
+            item.classList.add('active');
+        }
+
+        boardListContainer.appendChild(item);
+    });
+}
+
+function setBoardDetailLoading() {
+    if (!boardDetailContainer) return;
+    boardDetailContainer.classList.remove('board-detail-empty');
+    boardDetailContainer.innerHTML = `
+        <div class="board-detail-loading">
+            <div class="loading-spinner"></div>
+            <p>게시글을 불러오는 중입니다...</p>
+        </div>
+    `;
+}
+
+function renderBoardError(message) {
+    if (!boardDetailContainer) return;
+    boardDetailContainer.classList.remove('board-detail-empty');
+    boardDetailContainer.innerHTML = `
+        <div class="board-detail-error">
+            <div class="board-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function buildCommentsTree(comments = []) {
+    const nodes = new Map();
+    comments.forEach((comment) => {
+        nodes.set(comment.id, { ...comment, children: [] });
+    });
+    const roots = [];
+    nodes.forEach((node) => {
+        if (node.parentId && nodes.has(node.parentId)) {
+            nodes.get(node.parentId).children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+    const sortByDate = (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    const sortTree = (items) => {
+        items.sort(sortByDate);
+        items.forEach((item) => sortTree(item.children));
+    };
+    sortTree(roots);
+    return roots;
+}
+
+function renderCommentNode(comment) {
+    const children = comment.children && comment.children.length
+        ? `<ul class="board-comment-children">${comment.children.map(renderCommentNode).join('')}</ul>`
+        : '';
+
+    return `
+        <li class="board-comment" data-comment-id="${comment.id}">
+            <div class="board-comment-body">
+                <div class="board-comment-meta">
+                    <span class="board-comment-author">관리자</span>
+                    <time>${formatBoardDate(comment.createdAt)}</time>
+                </div>
+                <p class="board-comment-content">${formatBoardContent(comment.content)}</p>
+                <div class="board-comment-actions">
+                    <button type="button" class="board-reply-button" data-comment-id="${comment.id}">답글 작성</button>
+                </div>
+                <div class="board-reply-placeholder" data-parent-id="${comment.id}"></div>
+            </div>
+            ${children}
+        </li>
+    `;
+}
+
+function renderBoardDetail(post, comments = []) {
+    if (!boardDetailContainer) return;
+
+    boardDetailContainer.classList.remove('board-detail-empty');
+
+    const hasImages = Array.isArray(post.images) && post.images.length > 0;
+    const hasLinks = Array.isArray(post.links) && post.links.length > 0;
+    const commentTree = buildCommentsTree(comments);
+
+    boardDetailContainer.innerHTML = `
+        <article class="board-article">
+            <header class="board-detail-header">
+                <div>
+                    <h3 class="board-detail-title">${escapeHtml(post.title)}</h3>
+                    <div class="board-detail-meta">
+                        <time>${formatBoardDate(post.createdAt)}</time>
+                        ${post.updatedAt && post.updatedAt !== post.createdAt ? `<span class="board-detail-updated">업데이트: ${formatBoardDate(post.updatedAt)}</span>` : ''}
+                    </div>
+                </div>
+            </header>
+            ${post.summary ? `<p class="board-detail-summary">${escapeHtml(post.summary)}</p>` : ''}
+            <div class="board-detail-content">${formatBoardContent(post.content)}</div>
+
+            ${(hasImages || hasLinks) ? `
+                <section class="board-detail-attachments">
+                    ${hasImages ? `
+                        <div class="board-detail-images">
+                            <h4>이미지</h4>
+                            <div class="board-image-grid">
+                                ${post.images.map((image) => `
+                                    <figure class="board-image-item">
+                                        <img src="${image.url}" alt="${escapeHtml(image.name || '첨부 이미지')}" loading="lazy">
+                                    </figure>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${hasLinks ? `
+                        <div class="board-detail-links">
+                            <h4>관련 링크</h4>
+                            <ul>
+                                ${post.links.map((link) => `
+                                    <li>
+                                        <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
+                                            ${escapeHtml(link.label || link.url)}
+                                        </a>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </section>
+            ` : ''}
+
+            <section class="board-comments">
+                <div class="board-comments-header">
+                    <h4>댓글</h4>
+                    <p class="board-comment-helper">댓글 작성은 관리자 전용입니다.</p>
+                </div>
+                ${commentTree.length
+                    ? `<ul class="board-comment-list">${commentTree.map(renderCommentNode).join('')}</ul>`
+                    : '<p class="board-comment-empty">첫 번째 댓글을 남겨주세요.</p>'}
+                <form class="board-comment-form" data-post-id="${post.id}">
+                    <label class="board-form-label" for="boardCommentContent">댓글 내용</label>
+                    <textarea id="boardCommentContent" name="comment" class="board-form-textarea" placeholder="댓글 내용을 입력하세요." required></textarea>
+                    <label class="board-form-label" for="boardCommentPassword">관리자 비밀번호</label>
+                    <input id="boardCommentPassword" name="password" type="password" class="board-form-input" placeholder="비밀번호" required>
+                    <button type="submit" class="board-form-submit">댓글 등록</button>
+                </form>
+            </section>
+        </article>
+    `;
+}
+
+async function fetchBoardDetail(postId) {
+    if (!postId) return;
+
+    currentBoardPostId = postId;
+    setBoardDetailLoading();
+
+    try {
+        const response = await fetch(`/api/getBoardPost?id=${encodeURIComponent(postId)}`);
+        if (!response.ok) {
+            throw new Error('게시글을 불러오지 못했습니다.');
+        }
+        const data = await response.json();
+        renderBoardDetail(data.post, data.comments);
+        highlightActiveBoardItem(postId);
+    } catch (error) {
+        console.error('[board] detail load failed:', error);
+        renderBoardError(error.message || '게시글을 불러오는 데 실패했습니다.');
+    }
+}
+
+function highlightActiveBoardItem(postId) {
+    if (!boardListContainer) return;
+    boardListContainer.querySelectorAll('.board-item').forEach((item) => {
+        if (item.dataset.id === postId) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+async function loadBoardPosts() {
+    if (!boardListContainer) return;
+
+    renderBoardListEmpty('게시글 목록을 불러오는 중입니다...');
+
+    try {
+        const response = await fetch('/api/listBoardPosts');
+        if (!response.ok) {
+            throw new Error('게시글 목록을 불러오지 못했습니다.');
+        }
+        const { posts } = await response.json();
+        boardPostsCache = posts;
+        renderBoardList(posts);
+
+        if (posts.length > 0) {
+            fetchBoardDetail(posts[0].id);
+        } else if (boardDetailContainer) {
+            boardDetailContainer.classList.add('board-detail-empty');
+            boardDetailContainer.innerHTML = `
+                <div class="board-detail-placeholder">
+                    <h3>게시글이 없습니다</h3>
+                    <p>관리자 페이지에서 새로운 게시글을 등록하면 이곳에 표시됩니다.</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('[board] list load failed:', error);
+        renderBoardListEmpty('게시글 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+        renderBoardError('게시글 목록을 불러오는 데 실패했습니다.');
+    }
+}
+
+async function submitBoardComment({ postId, content, password, parentId = null }) {
+    const response = await fetch('/api/addBoardComment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ postId, content, password, parentId }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.error || '댓글 등록에 실패했습니다.');
+    }
+
+    return result.comment;
+}
+
+if (boardListContainer) {
+    boardListContainer.addEventListener('click', (event) => {
+        const item = event.target.closest('.board-item');
+        if (!item) return;
+        const postId = item.dataset.id;
+        if (!postId || postId === currentBoardPostId) return;
+        fetchBoardDetail(postId);
+    });
+}
+
+if (boardDetailContainer) {
+    boardDetailContainer.addEventListener('click', (event) => {
+        const replyButton = event.target.closest('.board-reply-button');
+        if (!replyButton) return;
+
+        const commentId = replyButton.dataset.commentId;
+        const placeholder = boardDetailContainer.querySelector(`.board-reply-placeholder[data-parent-id="${commentId}"]`);
+        if (!placeholder) return;
+
+        const existingForm = placeholder.querySelector('.board-reply-form');
+        if (existingForm) {
+            placeholder.innerHTML = '';
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.className = 'board-reply-form';
+        form.dataset.postId = currentBoardPostId || '';
+        form.dataset.parentId = commentId;
+        form.innerHTML = `
+            <label class="board-form-label">답글 내용</label>
+            <textarea name="comment" class="board-form-textarea" rows="3" placeholder="답글 내용을 입력하세요." required></textarea>
+            <label class="board-form-label">관리자 비밀번호</label>
+            <input name="password" type="password" class="board-form-input" placeholder="비밀번호" required>
+            <div class="board-reply-actions">
+                <button type="submit" class="board-form-submit">답글 등록</button>
+                <button type="button" class="board-reply-cancel">취소</button>
+            </div>
+        `;
+
+        placeholder.innerHTML = '';
+        placeholder.appendChild(form);
+    });
+
+    boardDetailContainer.addEventListener('click', (event) => {
+        const cancelButton = event.target.closest('.board-reply-cancel');
+        if (!cancelButton) return;
+        const form = cancelButton.closest('.board-reply-form');
+        if (form && form.parentElement) {
+            form.parentElement.innerHTML = '';
+        }
+    });
+
+    boardDetailContainer.addEventListener('submit', async (event) => {
+        const form = event.target;
+
+        if (!form.classList.contains('board-comment-form') && !form.classList.contains('board-reply-form')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const postId = form.dataset.postId || currentBoardPostId;
+        const parentId = form.dataset.parentId || null;
+        const contentField = form.querySelector('textarea[name="comment"]');
+        const passwordField = form.querySelector('input[name="password"]');
+
+        if (!contentField || !passwordField) {
+            showNotification('폼 구성이 올바르지 않습니다.', 'error');
+            return;
+        }
+
+        const content = contentField.value.trim();
+        const password = passwordField.value.trim();
+
+        if (content.length < 2) {
+            showNotification('댓글 내용을 2글자 이상 입력해주세요.', 'error');
+            return;
+        }
+
+        if (!password) {
+            showNotification('관리자 비밀번호를 입력해주세요.', 'error');
+            return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = '등록 중...';
+        }
+
+        try {
+            await submitBoardComment({ postId, content, password, parentId });
+            showNotification('댓글이 등록되었습니다.', 'success');
+            contentField.value = '';
+            passwordField.value = '';
+            if (form.classList.contains('board-reply-form') && form.parentElement) {
+                form.parentElement.innerHTML = '';
+            }
+            fetchBoardDetail(postId);
+        } catch (error) {
+            console.error('[board] comment submit failed:', error);
+            showNotification(error.message || '댓글 등록에 실패했습니다.', 'error');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = form.classList.contains('board-reply-form') ? '답글 등록' : '댓글 등록';
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadPodcasts();
+    loadBoardPosts();
+});

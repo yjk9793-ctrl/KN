@@ -10,8 +10,8 @@
 <body class="admin-body">
     <main class="admin-wrapper">
         <section class="admin-card">
-            <h1 class="admin-title">팟캐스트 관리</h1>
-            <p class="admin-subtitle">비밀번호를 입력해 업로드 도구에 접근하세요.</p>
+            <h1 class="admin-title">콘텐츠 관리자</h1>
+            <p class="admin-subtitle">비밀번호를 입력한 뒤 팟캐스트와 게시판 글을 관리할 수 있습니다.</p>
 
             <form id="adminLoginForm" class="admin-form">
                 <label for="adminPassword" class="admin-label">관리자 비밀번호</label>
@@ -20,10 +20,14 @@
                 <p class="admin-helper">이 페이지는 공개되지 않으며, 비밀번호가 일치해야만 업로드 기능이 노출됩니다.</p>
             </form>
 
-            <div id="uploadStatus" class="admin-status admin-status--info admin-hidden"></div>
+            <nav id="adminTabs" class="admin-tabs admin-hidden" aria-label="콘텐츠 유형 선택">
+                <button type="button" class="admin-tab active" data-target="podcastPanel">팟캐스트 업로드</button>
+                <button type="button" class="admin-tab" data-target="boardPanel">게시글 작성</button>
+            </nav>
 
-            <section id="uploadSection" class="admin-hidden">
+            <section id="podcastPanel" class="admin-panel admin-hidden" aria-labelledby="podcast 탭">
                 <hr class="admin-divider">
+                <div id="uploadStatus" class="admin-status admin-status--info admin-hidden"></div>
                 <form id="podcastUploadForm" class="admin-form">
                     <div class="admin-field">
                         <label for="episodeTitle" class="admin-label">에피소드 제목</label>
@@ -39,6 +43,36 @@
                         <p class="admin-helper">현재 구성은 약 4MB 이하의 파일 업로드에 최적화되어 있습니다. 더 큰 파일은 Vercel Blob 업로드 URL 방식을 고려하세요.</p>
                     </div>
                     <button type="submit" class="btn btn-primary admin-button">팟캐스트 업로드</button>
+                </form>
+            </section>
+
+            <section id="boardPanel" class="admin-panel admin-hidden" aria-labelledby="게시글 탭">
+                <hr class="admin-divider">
+                <div id="boardStatus" class="admin-status admin-status--info admin-hidden"></div>
+                <form id="boardPostForm" class="admin-form">
+                    <div class="admin-field">
+                        <label for="boardTitle" class="admin-label">게시글 제목</label>
+                        <input type="text" id="boardTitle" class="admin-input" placeholder="예) 신규 프로그램 오픈 안내" required>
+                    </div>
+                    <div class="admin-field">
+                        <label for="boardSummary" class="admin-label">요약 (선택)</label>
+                        <input type="text" id="boardSummary" class="admin-input" placeholder="목록에 표시될 간략한 소개를 작성하세요.">
+                    </div>
+                    <div class="admin-field">
+                        <label for="boardContent" class="admin-label">본문</label>
+                        <textarea id="boardContent" class="admin-textarea" rows="8" placeholder="본문 내용을 입력하세요. 줄바꿈과 기본 서식을 지원합니다." required></textarea>
+                    </div>
+                    <div class="admin-field">
+                        <label for="boardLinks" class="admin-label">링크 (선택)</label>
+                        <textarea id="boardLinks" class="admin-textarea" rows="3" placeholder="각 줄마다 http로 시작하는 링크를 입력하세요."></textarea>
+                        <p class="admin-helper">필요하다면 URL 뒤에 공백과 함께 표시할 제목을 입력할 수 있습니다. (예: https://example.com 설명).</p>
+                    </div>
+                    <div class="admin-field">
+                        <label for="boardImages" class="admin-label">이미지 첨부 (선택)</label>
+                        <input type="file" id="boardImages" class="admin-input" accept="image/*" multiple>
+                        <p class="admin-helper">한 장당 최대 6MB, 3장 이하 업로드를 권장합니다.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary admin-button">게시글 등록</button>
                 </form>
             </section>
         </section>

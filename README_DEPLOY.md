@@ -36,3 +36,13 @@ GitHub 푸시 후 Vercel이 자동 배포합니다.
 5. 대용량 파일은 업로드 전에 용량을 축소하거나 Vercel Blob의 업로드 URL 방식을 적용하도록 가이드를 추가해 주세요. (현재 구현은 약 10~12MB 이내에 최적화되어 있음)
 
 > 참고: 업로드된 파일은 일반 공개 URL로 재생되므로 완전한 다운로드 차단은 기술적으로 어렵습니다. 위 설정으로 기본 다운로드 UI만 비활성화합니다.
+
+## 게시판 & 댓글 관리
+
+1. 동일한 `ADMIN_PASSWORD`와 `BLOB_READ_WRITE_TOKEN` 환경 변수를 사용합니다.
+2. `admin.html` 로그인 후 탭에서 “게시글 작성”을 선택하면 게시글 등록 폼이 노출됩니다.
+   - 제목, 요약(선택), 본문, 링크(줄 단위), 이미지(최대 6MB 권장)를 입력하면 `/api/createBoardPost`를 통해 Vercel Blob에 저장됩니다.
+   - 게시글 데이터는 `board/<postId>/post.json`, 댓글은 `board/<postId>/comments.json`, 첨부 이미지는 `board/<postId>/images/*` 경로에 저장됩니다.
+3. 공개 사이트에서는 `/api/listBoardPosts`로 게시글 목록을, `/api/getBoardPost`로 상세 내용을 확인하며 최신 글은 72시간 동안 “New” 배지로 상단에 노출됩니다.
+4. 댓글·대댓글 작성은 관리자 비밀번호가 필요한 `/api/addBoardComment` 경로를 이용합니다. 댓글은 트리 구조로 렌더링되며, 상세 화면에서 바로 입력할 수 있습니다.
+5. Vercel Blob RW 토큰이 누락되면 게시글/댓글 저장이 실패하므로 배포 전 환경 변수를 반드시 설정하세요.
