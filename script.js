@@ -656,22 +656,44 @@ document.addEventListener('keydown', (event) => {
 });
 
 if (acceleratorForm) {
-    acceleratorForm.addEventListener('submit', (event) => {
+    acceleratorForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         const applicantName = acceleratorForm.applicantName.value.trim();
         const applicantCompany = acceleratorForm.applicantCompany.value.trim();
         const applicantPhone = acceleratorForm.applicantPhone.value.trim();
         const applicantMessage = acceleratorForm.applicantMessage.value.trim();
+        const applicantDepartment = acceleratorForm.applicantDepartment.value.trim();
 
         if (!applicantName || !applicantCompany || !applicantPhone || !applicantMessage) {
             showNotification('필수 항목을 모두 입력해 주세요.', 'error');
             return;
         }
 
-        showNotification('신청이 접수되었습니다. 빠른 시일 내에 연락드릴게요!', 'success');
-        acceleratorForm.reset();
-        closeAcceleratorModal();
+        const composedMessage = [
+            `회사: ${applicantCompany}`,
+            applicantDepartment ? `부서: ${applicantDepartment}` : null,
+            `전화번호: ${applicantPhone}`,
+            '',
+            '고민사항:',
+            applicantMessage
+        ].filter(Boolean).join('\n');
+
+        try {
+            await sendEmail({
+                name: applicantName,
+                email: 'accelerator@knpartners.co',
+                serviceType: 'Startup HR Growth Program 신청',
+                message: composedMessage,
+            });
+
+            showNotification('신청이 접수되었습니다. 빠른 시일 내에 연락드릴게요!', 'success');
+            acceleratorForm.reset();
+            closeAcceleratorModal();
+        } catch (error) {
+            console.error('[accelerator] send email failed:', error);
+            showNotification('신청 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
+        }
     });
 }
 
