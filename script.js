@@ -1034,7 +1034,12 @@ async function fetchBoardDetail(postId) {
     if (!postId) return;
 
     try {
-        const response = await fetch(`/api/getBoardPost?id=${encodeURIComponent(postId)}`);
+        const response = await fetch(`/api/getBoardPost?id=${encodeURIComponent(postId)}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+            },
+        });
         if (!response.ok) {
             throw new Error('게시글을 불러오지 못했습니다.');
         }
@@ -1092,7 +1097,12 @@ async function loadBoardPosts() {
     setBoardTableEmpty('게시글을 불러오는 중입니다...');
 
     try {
-        const response = await fetch('/api/listBoardPosts');
+        const response = await fetch('/api/listBoardPosts', {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+            },
+        });
         if (!response.ok) {
             throw new Error('게시글 목록을 불러오지 못했습니다.');
         }
