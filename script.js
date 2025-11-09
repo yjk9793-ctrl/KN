@@ -12,6 +12,10 @@ const pdfFileInput = document.getElementById('pdfFileInput');
 const uploadArea = document.getElementById('uploadArea');
 const filesList = document.getElementById('filesList');
 const podcastList = document.getElementById('podcastList');
+const acceleratorApplyButton = document.getElementById('acceleratorApplyButton');
+const acceleratorModal = document.getElementById('acceleratorModal');
+const acceleratorForm = document.getElementById('acceleratorForm');
+const acceleratorCloseTargets = acceleratorModal ? acceleratorModal.querySelectorAll('[data-modal-close]') : [];
 
 // ============================================
 // Navigation Functions
@@ -593,6 +597,82 @@ if (!document.querySelector('#file-card-styles')) {
         }
     `;
     document.head.appendChild(style);
+}
+
+// ============================================
+// Accelerator Modal & Form
+// ============================================
+
+let acceleratorLastFocusedElement = null;
+
+function openAcceleratorModal() {
+    if (!acceleratorModal) return;
+    acceleratorLastFocusedElement = document.activeElement;
+    acceleratorModal.classList.add('open');
+    acceleratorModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+
+    const focusTarget = acceleratorModal.querySelector('input, textarea, button');
+    if (focusTarget) {
+        focusTarget.focus();
+    }
+}
+
+function closeAcceleratorModal() {
+    if (!acceleratorModal) return;
+    acceleratorModal.classList.remove('open');
+    acceleratorModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+
+    if (acceleratorLastFocusedElement && typeof acceleratorLastFocusedElement.focus === 'function') {
+        acceleratorLastFocusedElement.focus();
+    }
+}
+
+if (acceleratorApplyButton && acceleratorModal) {
+    acceleratorApplyButton.addEventListener('click', () => {
+        openAcceleratorModal();
+    });
+}
+
+acceleratorCloseTargets.forEach((element) => {
+    element.addEventListener('click', () => {
+        closeAcceleratorModal();
+    });
+});
+
+if (acceleratorModal) {
+    acceleratorModal.addEventListener('click', (event) => {
+        if (event.target === acceleratorModal) {
+            closeAcceleratorModal();
+        }
+    });
+}
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && acceleratorModal && acceleratorModal.classList.contains('open')) {
+        closeAcceleratorModal();
+    }
+});
+
+if (acceleratorForm) {
+    acceleratorForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const applicantName = acceleratorForm.applicantName.value.trim();
+        const applicantCompany = acceleratorForm.applicantCompany.value.trim();
+        const applicantPhone = acceleratorForm.applicantPhone.value.trim();
+        const applicantMessage = acceleratorForm.applicantMessage.value.trim();
+
+        if (!applicantName || !applicantCompany || !applicantPhone || !applicantMessage) {
+            showNotification('필수 항목을 모두 입력해 주세요.', 'error');
+            return;
+        }
+
+        showNotification('신청이 접수되었습니다. 빠른 시일 내에 연락드릴게요!', 'success');
+        acceleratorForm.reset();
+        closeAcceleratorModal();
+    });
 }
 
 // ============================================

@@ -918,10 +918,337 @@ section {
 }
 
 /* ============================================
-   Board Section
+   Startup Accelerator Section
    ============================================ */
 
+.accelerator {
+    position: relative;
+    padding: 120px 0;
+    overflow: hidden;
+    background: radial-gradient(circle at top, rgba(165, 180, 252, 0.3), rgba(17, 24, 39, 0.9));
+}
 
+.accelerator .container {
+    position: relative;
+    z-index: 2;
+}
+
+.accelerator-bg-image {
+    object-fit: cover;
+    filter: brightness(0.65) saturate(1.1);
+}
+
+.accelerator-overlay {
+    background: linear-gradient(160deg, rgba(79, 70, 229, 0.4) 0%, rgba(17, 24, 39, 0.8) 60%, rgba(15, 23, 42, 0.95) 100%);
+}
+
+.accelerator .section-header {
+    text-align: center;
+    max-width: 760px;
+    margin: 0 auto 32px;
+}
+
+.accelerator-intro {
+    max-width: 640px;
+    margin: 0 auto 48px;
+    text-align: center;
+    color: rgba(224, 231, 255, 0.9);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.accelerator-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+}
+
+.accelerator-card {
+    position: relative;
+    background: rgba(14, 20, 35, 0.8);
+    border: 1px solid rgba(148, 163, 255, 0.24);
+    border-radius: var(--radius-2xl);
+    padding: 32px 28px;
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.program-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.45), rgba(129, 140, 248, 0.45));
+    border: 1px solid rgba(165, 180, 252, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #eef2ff;
+    box-shadow: 0 14px 28px rgba(99, 102, 241, 0.35);
+}
+
+.program-icon svg {
+    width: 34px;
+    height: 34px;
+}
+
+.program-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.program-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8faff;
+    margin: 0;
+}
+
+.program-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.program-row {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.program-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(165, 180, 252, 0.75);
+}
+
+.program-value {
+    color: rgba(226, 232, 240, 0.92);
+    line-height: 1.6;
+    font-size: 0.96rem;
+}
+
+.accelerator-cta {
+    margin-top: 56px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+}
+
+.accelerator-cta-note {
+    color: rgba(224, 231, 255, 0.85);
+    font-size: 1rem;
+}
+
+.accelerator-cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 26px;
+    font-size: 1rem;
+    box-shadow: 0 20px 38px rgba(79, 70, 229, 0.45);
+}
+
+.accelerator-cta-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 768px) {
+    .accelerator {
+        padding: 90px 0;
+    }
+
+    .program-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .program-label {
+        font-size: 0.82rem;
+    }
+}
+
+/* ============================================
+   Modal
+   ============================================ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 999;
+}
+
+.modal.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+}
+
+.modal-dialog {
+    position: relative;
+    max-width: 560px;
+    width: calc(100% - 32px);
+    background: rgba(13, 22, 39, 0.95);
+    border: 1px solid rgba(148, 163, 255, 0.28);
+    border-radius: var(--radius-2xl);
+    padding: 36px;
+    box-shadow: 0 40px 80px rgba(15, 23, 42, 0.55);
+    z-index: 1;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(51, 65, 85, 0.4);
+    color: rgba(226, 232, 240, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.modal-close-button:hover {
+    background: rgba(99, 102, 241, 0.6);
+    transform: translateY(-1px);
+}
+
+.modal-close-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.modal-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f8faff;
+    margin: 0 0 10px;
+}
+
+.modal-description {
+    color: rgba(203, 213, 225, 0.85);
+    margin-bottom: 28px;
+    line-height: 1.6;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.modal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-field label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(226, 232, 240, 0.85);
+}
+
+.modal-field input,
+.modal-field textarea {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 255, 0.28);
+    background: rgba(15, 23, 42, 0.8);
+    color: #e2e8f0;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-field input:focus,
+.modal-field textarea:focus {
+    border-color: rgba(129, 140, 248, 0.6);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+    outline: none;
+}
+
+.modal-field textarea {
+    resize: vertical;
+    min-height: 140px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-secondary-button {
+    padding: 12px 22px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 255, 0.4);
+    background: transparent;
+    color: rgba(224, 231, 255, 0.9);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.modal-secondary-button:hover {
+    background: rgba(148, 163, 255, 0.2);
+    color: #f8faff;
+}
+
+.modal-submit-button {
+    box-shadow: 0 20px 36px rgba(79, 70, 229, 0.45);
+}
+
+@media (max-width: 640px) {
+    .modal-dialog {
+        padding: 28px 22px 26px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .modal-secondary-button,
+    .modal-submit-button {
+        width: 100%;
+    }
+}
+
+body.modal-open {
+    overflow: hidden;
+}
 
 .podcast {
     position: relative;
