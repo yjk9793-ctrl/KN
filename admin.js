@@ -19,6 +19,19 @@ const boardImagesInput = document.getElementById('boardImages');
 let uploading = false;
 let posting = false;
 
+async function parseJsonResponse(response) {
+    const raw = await response.text();
+    if (!raw) {
+        return {};
+    }
+    try {
+        return JSON.parse(raw);
+    } catch (error) {
+        console.error('[admin] Failed to parse JSON response:', error.message);
+        return {};
+    }
+}
+
 function setStatus(element, message, type = 'info') {
     if (!element) return;
     element.textContent = message;
@@ -89,7 +102,7 @@ async function uploadPodcast(formData) {
             body: JSON.stringify(formData),
         });
 
-        const result = await response.json();
+        const result = await parseJsonResponse(response);
 
         if (!response.ok) {
             throw new Error(result.error || '업로드에 실패했습니다.');
@@ -177,7 +190,7 @@ async function uploadBoardPost(formData) {
             body: JSON.stringify(formData),
         });
 
-        const result = await response.json();
+        const result = await parseJsonResponse(response);
         if (!response.ok) {
             throw new Error(result.error || '게시글 등록에 실패했습니다.');
         }
