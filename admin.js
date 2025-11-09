@@ -5,6 +5,7 @@ const tabButtons = tabsContainer ? Array.from(tabsContainer.querySelectorAll('.a
 const podcastPanel = document.getElementById('podcastPanel');
 const boardPanel = document.getElementById('boardPanel');
 const uploadForm = document.getElementById('podcastUploadForm');
+const loginStatusBox = document.getElementById('loginStatus');
 const statusBox = document.getElementById('uploadStatus');
 const titleInput = document.getElementById('episodeTitle');
 const descriptionInput = document.getElementById('episodeDescription');
@@ -64,7 +65,7 @@ function activatePanel(targetId) {
 async function verifyPassword(password) {
     if (verifying) return;
     verifying = true;
-    setStatus(statusBox, '비밀번호 확인 중...', 'info');
+    setStatus(loginStatusBox, '비밀번호 확인 중...', 'info');
     clearStatus(boardStatusBox);
 
     try {
@@ -80,7 +81,7 @@ async function verifyPassword(password) {
             throw new Error('비밀번호가 올바르지 않습니다.');
         }
 
-        setStatus(statusBox, '접속이 확인되었습니다. 원하는 작업을 선택하세요.', 'success');
+        setStatus(loginStatusBox, '접속이 확인되었습니다. 원하는 작업을 선택하세요.', 'success');
         loginForm.classList.add('admin-hidden');
         adminPassword = password;
 
@@ -88,8 +89,9 @@ async function verifyPassword(password) {
             tabsContainer.classList.remove('admin-hidden');
         }
         activatePanel('podcastPanel');
+        clearStatus(loginStatusBox);
     } catch (error) {
-        setStatus(statusBox, error.message || '비밀번호 인증에 실패했습니다.', 'error');
+        setStatus(loginStatusBox, error.message || '비밀번호 인증에 실패했습니다.', 'error');
         adminPassword = '';
     } finally {
         verifying = false;
@@ -149,7 +151,7 @@ if (loginForm) {
         const password = passwordInput.value.trim();
 
         if (!password) {
-            setStatus(statusBox, '비밀번호를 입력해주세요.', 'error');
+            setStatus(loginStatusBox, '비밀번호를 입력해주세요.', 'error');
             return;
         }
 
