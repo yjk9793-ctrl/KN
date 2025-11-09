@@ -1140,7 +1140,15 @@ async function submitBoardComment({ postId, content, parentId = null }) {
         body: JSON.stringify({ postId, content, parentId }),
     });
 
-    const result = await response.json();
+    const raw = await response.text();
+    let result = {};
+    if (raw) {
+        try {
+            result = JSON.parse(raw);
+        } catch (error) {
+            console.error('[board] comment response parse failed:', error.message);
+        }
+    }
     if (!response.ok) {
         throw new Error(result.error || '댓글 등록에 실패했습니다.');
     }
