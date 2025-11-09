@@ -1,11 +1,8 @@
-const loginForm = document.getElementById('adminLoginForm');
-const passwordInput = document.getElementById('adminPassword');
 const tabsContainer = document.getElementById('adminTabs');
 const tabButtons = tabsContainer ? Array.from(tabsContainer.querySelectorAll('.admin-tab')) : [];
 const podcastPanel = document.getElementById('podcastPanel');
 const boardPanel = document.getElementById('boardPanel');
 const uploadForm = document.getElementById('podcastUploadForm');
-const loginStatusBox = document.getElementById('loginStatus');
 const statusBox = document.getElementById('uploadStatus');
 const titleInput = document.getElementById('episodeTitle');
 const descriptionInput = document.getElementById('episodeDescription');
@@ -19,8 +16,6 @@ const boardContentInput = document.getElementById('boardContent');
 const boardLinksInput = document.getElementById('boardLinks');
 const boardImagesInput = document.getElementById('boardImages');
 
-let adminPassword = '';
-let verifying = false;
 let uploading = false;
 let posting = false;
 
@@ -60,42 +55,6 @@ function activatePanel(targetId) {
             button.classList.remove('active');
         }
     });
-}
-
-async function verifyPassword(password) {
-    if (verifying) return;
-    verifying = true;
-    setStatus(loginStatusBox, '비밀번호 확인 중...', 'info');
-    clearStatus(boardStatusBox);
-
-    try {
-        const response = await fetch('/api/uploadPodcast', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ password, action: 'verify' }),
-        });
-
-        if (!response.ok) {
-            throw new Error('비밀번호가 올바르지 않습니다.');
-        }
-
-        setStatus(loginStatusBox, '접속이 확인되었습니다. 원하는 작업을 선택하세요.', 'success');
-        loginForm.classList.add('admin-hidden');
-        adminPassword = password;
-
-        if (tabsContainer) {
-            tabsContainer.classList.remove('admin-hidden');
-        }
-        activatePanel('podcastPanel');
-        clearStatus(loginStatusBox);
-    } catch (error) {
-        setStatus(loginStatusBox, error.message || '비밀번호 인증에 실패했습니다.', 'error');
-        adminPassword = '';
-    } finally {
-        verifying = false;
-    }
 }
 
 function fileToBase64(file) {
@@ -145,28 +104,9 @@ async function uploadPodcast(formData) {
     }
 }
 
-if (loginForm) {
-    loginForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const password = passwordInput.value.trim();
-
-        if (!password) {
-            setStatus(loginStatusBox, '비밀번호를 입력해주세요.', 'error');
-            return;
-        }
-
-        verifyPassword(password);
-    });
-}
-
 if (uploadForm) {
     uploadForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-
-        if (!adminPassword) {
-            setStatus(statusBox, '먼저 관리자 인증이 필요합니다.', 'error');
-            return;
-        }
 
         const title = titleInput.value.trim();
         const description = descriptionInput.value.trim();
@@ -189,7 +129,6 @@ if (uploadForm) {
             setStatus(statusBox, '업로드 중...', 'info');
 
             await uploadPodcast({
-                password: adminPassword,
                 title,
                 description,
                 fileName: file.name,
@@ -256,11 +195,6 @@ if (boardForm) {
     boardForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        if (!adminPassword) {
-            setStatus(boardStatusBox, '먼저 관리자 인증이 필요합니다.', 'error');
-            return;
-        }
-
         const title = boardTitleInput.value.trim();
         const content = boardContentInput.value.trim();
         const author = boardAuthorInput ? boardAuthorInput.value.trim() : '';
@@ -297,7 +231,6 @@ if (boardForm) {
             );
 
             await uploadBoardPost({
-                password: adminPassword,
                 title,
                 author,
                 summary,

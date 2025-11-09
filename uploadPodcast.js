@@ -7,14 +7,6 @@ function setCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function ensurePassword() {
-    const password = process.env.ADMIN_PASSWORD;
-    if (!password) {
-        throw new Error('ADMIN_PASSWORD is not configured');
-    }
-    return password;
-}
-
 function sanitizeFileName(name) {
     return name
         .toLowerCase()
@@ -47,25 +39,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Invalid request body' });
     }
 
-    const adminPassword = (() => {
-        try {
-            return ensurePassword();
-        } catch (error) {
-            console.error('[uploadPodcast] Config error:', error.message);
-            res.status(500).json({ error: 'Server misconfiguration' });
-            throw error;
-        }
-    })();
-
-    const { password, title, description, audioData, fileName, contentType, action } = body;
-
-    if (!password) {
-        return res.status(401).json({ error: 'Missing password' });
-    }
-
-    if (password !== adminPassword) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const { title, description, audioData, fileName, contentType, action } = body;
 
     if (action === 'verify') {
         return res.status(200).json({ success: true });

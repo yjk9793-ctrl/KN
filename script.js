@@ -1008,7 +1008,7 @@ function renderBoardDetail(post, comments = []) {
         <section class="board-comments">
             <header class="board-comments-header">
                 <h4>댓글</h4>
-                <p>댓글 작성은 관리자 전용입니다.</p>
+                <p>댓글을 작성할 수 있습니다.</p>
             </header>
             ${commentTree.length
                 ? `<ul class="board-comment-list">${commentTree.map(renderCommentNode).join('')}</ul>`
@@ -1017,10 +1017,6 @@ function renderBoardDetail(post, comments = []) {
                 <div class="board-form-field">
                     <label for="boardCommentContent" class="board-form-label">댓글 내용</label>
                     <textarea id="boardCommentContent" name="comment" class="board-form-textarea" rows="4" placeholder="댓글 내용을 입력하세요." required></textarea>
-                </div>
-                <div class="board-form-field">
-                    <label for="boardCommentPassword" class="board-form-label">관리자 비밀번호</label>
-                    <input id="boardCommentPassword" name="password" type="password" class="board-form-input" placeholder="비밀번호" required>
                 </div>
                 <div class="board-form-actions">
                     <button type="submit" class="board-form-submit">댓글 등록</button>
@@ -1135,13 +1131,13 @@ async function loadBoardPosts() {
     }
 }
 
-async function submitBoardComment({ postId, content, password, parentId = null }) {
+async function submitBoardComment({ postId, content, parentId = null }) {
     const response = await fetch('/api/addBoardComment', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId, content, password, parentId }),
+        body: JSON.stringify({ postId, content, parentId }),
     });
 
     const result = await response.json();
@@ -1233,10 +1229,6 @@ function handleBoardDetailClick(event) {
                     <label class="board-form-label">답글 내용</label>
                     <textarea name="comment" class="board-form-textarea" rows="3" placeholder="답글 내용을 입력하세요." required></textarea>
                 </div>
-                <div class="board-form-field">
-                    <label class="board-form-label">관리자 비밀번호</label>
-                    <input name="password" type="password" class="board-form-input" placeholder="비밀번호" required>
-                </div>
                 <div class="board-form-actions">
                     <button type="submit" class="board-form-submit">답글 등록</button>
                     <button type="button" class="board-reply-cancel">취소</button>
@@ -1284,23 +1276,16 @@ async function handleBoardDetailSubmit(event) {
     }
 
     const contentField = form.querySelector('textarea[name="comment"]');
-    const passwordField = form.querySelector('input[name="password"]');
 
-    if (!contentField || !passwordField) {
+    if (!contentField) {
         showNotification('폼 구성이 올바르지 않습니다.', 'error');
         return;
     }
 
     const content = contentField.value.trim();
-    const password = passwordField.value.trim();
 
     if (content.length < 2) {
         showNotification('내용을 2글자 이상 입력해주세요.', 'error');
-        return;
-    }
-
-    if (!password) {
-        showNotification('관리자 비밀번호를 입력해주세요.', 'error');
         return;
     }
 
@@ -1312,10 +1297,9 @@ async function handleBoardDetailSubmit(event) {
 
     try {
         const parentId = form.dataset.parentId || null;
-        await submitBoardComment({ postId, content, password, parentId });
+        await submitBoardComment({ postId, content, parentId });
         showNotification('등록되었습니다.', 'success');
         contentField.value = '';
-        passwordField.value = '';
         if (form.classList.contains('board-reply-form') && form.parentElement) {
             form.parentElement.innerHTML = '';
         }

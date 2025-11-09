@@ -51,17 +51,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Invalid request body' });
     }
 
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    if (!adminPassword) {
-        console.error('[addBoardComment] ADMIN_PASSWORD is not configured');
-        return res.status(500).json({ error: 'Server misconfiguration' });
-    }
-
-    const { password, postId, content, parentId = null } = body;
-
-    if (!password || password !== adminPassword) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const { postId, content, parentId = null } = body;
 
     if (!postId) {
         return res.status(400).json({ error: 'postId는 필수입니다.' });

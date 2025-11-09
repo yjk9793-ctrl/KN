@@ -27,9 +27,7 @@ GitHub 푸시 후 Vercel이 자동 배포합니다.
 
 ## 팟캐스트 업로드 설정
 
-1. Vercel 프로젝트 환경 변수에 다음 값을 추가합니다.
-   - `ADMIN_PASSWORD`: 관리자 페이지(`admin.html`) 접속 시 사용할 비밀번호.
-   - `BLOB_READ_WRITE_TOKEN`: Vercel Blob 스토리지 RW 토큰. `vercel storage tokens create <token-name>` 명령으로 생성 가능합니다.
+1. Vercel 프로젝트 환경 변수에 `BLOB_READ_WRITE_TOKEN`을 추가합니다. `vercel storage tokens create <token-name>` 명령으로 생성 가능합니다.
 2. 첫 배포 후 `https://<your-domain>/admin.html`에 접속해 비밀번호를 입력하면 업로드 폼이 노출됩니다.
 3. 업로드 폼에서는 제목·소개·오디오 파일을 입력하여 `/api/uploadPodcast`로 전송합니다. 오디오는 Vercel Blob에 저장되고 메타데이터(`metadata.json`)가 함께 생성됩니다.
 4. 공개 사이트(`index.html`)는 `/api/listPodcasts`를 통해 메타데이터를 불러와 오디오 플레이어를 렌더링합니다. `<audio>` 태그에 `controlslist="nodownload noplaybackrate"`와 `disablepictureinpicture`를 설정해 다운로드 버튼을 숨깁니다.
@@ -39,7 +37,7 @@ GitHub 푸시 후 Vercel이 자동 배포합니다.
 
 ## 게시판 사용 안내
 
-1. 동일한 `ADMIN_PASSWORD`와 `BLOB_READ_WRITE_TOKEN` 환경 변수를 사용합니다.
+1. `BLOB_READ_WRITE_TOKEN` 환경 변수만 설정되어 있으면 됩니다. (비밀번호 검증은 사용하지 않습니다.)
 2. `admin.html`의 “게시글 작성” 탭에서 제목·작성자·요약·본문·링크·이미지를 입력하면 `/api/createBoardPost`를 통해 게시글이 저장됩니다.
    - 게시글 데이터는 `board/<postId>/post.json`, 댓글은 `board/<postId>/comments.json`, 첨부 이미지는 `board/<postId>/images/*` 경로에 저장됩니다.
 3. 공개 페이지의 게시판은 JSP 스타일 레이아웃으로 구성되어 있으며 상단 검색/필터(제목·작성자·본문)와 페이지네이션을 제공합니다.

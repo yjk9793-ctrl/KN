@@ -7,14 +7,6 @@ function setCors(res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function ensurePassword() {
-    const password = process.env.ADMIN_PASSWORD;
-    if (!password) {
-        throw new Error('ADMIN_PASSWORD is not configured');
-    }
-    return password;
-}
-
 function sanitizeFileName(name) {
     return name
         .toLowerCase()
@@ -72,18 +64,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Invalid request body' });
     }
 
-    const adminPassword = (() => {
-        try {
-            return ensurePassword();
-        } catch (error) {
-            console.error('[createBoardPost] Config error:', error.message);
-            res.status(500).json({ error: 'Server misconfiguration' });
-            throw error;
-        }
-    })();
-
     const {
-        password,
         title,
         content,
         summary,
@@ -91,10 +72,6 @@ module.exports = async (req, res) => {
         links = [],
         images = [],
     } = body;
-
-    if (!password || password !== adminPassword) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
 
     if (!title || typeof title !== 'string' || title.trim().length < 2) {
         return res.status(400).json({ error: '제목을 2글자 이상 입력해주세요.' });

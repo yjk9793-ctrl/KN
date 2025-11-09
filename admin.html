@@ -13,20 +13,12 @@
             <h1 class="admin-title">콘텐츠 관리자</h1>
             <p class="admin-subtitle">비밀번호를 입력한 뒤 팟캐스트와 게시판 글을 관리할 수 있습니다.</p>
 
-            <form id="adminLoginForm" class="admin-form">
-                <label for="adminPassword" class="admin-label">관리자 비밀번호</label>
-                <input type="password" id="adminPassword" class="admin-input" placeholder="비밀번호 입력" required>
-                <button type="submit" class="btn btn-primary admin-button">접속</button>
-                <p class="admin-helper">이 페이지는 공개되지 않으며, 비밀번호가 일치해야만 업로드 기능이 노출됩니다.</p>
-                <div id="loginStatus" class="admin-status admin-status--info admin-hidden"></div>
-            </form>
-
-            <nav id="adminTabs" class="admin-tabs admin-hidden" aria-label="콘텐츠 유형 선택">
+            <nav id="adminTabs" class="admin-tabs" aria-label="콘텐츠 유형 선택">
                 <button type="button" class="admin-tab active" data-target="podcastPanel">팟캐스트 업로드</button>
                 <button type="button" class="admin-tab" data-target="boardPanel">게시글 작성</button>
             </nav>
 
-            <section id="podcastPanel" class="admin-panel admin-hidden" aria-labelledby="podcast 탭">
+            <section id="podcastPanel" class="admin-panel" aria-labelledby="podcast 탭">
                 <hr class="admin-divider">
                 <div id="uploadStatus" class="admin-status admin-status--info admin-hidden"></div>
                 <form id="podcastUploadForm" class="admin-form">
