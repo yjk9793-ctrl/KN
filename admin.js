@@ -1,23 +1,10 @@
-const tabsContainer = document.getElementById('adminTabs');
-const tabButtons = tabsContainer ? Array.from(tabsContainer.querySelectorAll('.admin-tab')) : [];
-const podcastPanel = document.getElementById('podcastPanel');
-const boardPanel = document.getElementById('boardPanel');
 const uploadForm = document.getElementById('podcastUploadForm');
 const statusBox = document.getElementById('uploadStatus');
 const titleInput = document.getElementById('episodeTitle');
 const descriptionInput = document.getElementById('episodeDescription');
 const fileInput = document.getElementById('episodeFile');
-const boardForm = document.getElementById('boardPostForm');
-const boardStatusBox = document.getElementById('boardStatus');
-const boardTitleInput = document.getElementById('boardTitle');
-const boardAuthorInput = document.getElementById('boardAuthor');
-const boardSummaryInput = document.getElementById('boardSummary');
-const boardContentInput = document.getElementById('boardContent');
-const boardLinksInput = document.getElementById('boardLinks');
-const boardImagesInput = document.getElementById('boardImages');
 
 let uploading = false;
-let posting = false;
 
 async function parseJsonResponse(response) {
     const raw = await response.text();
@@ -43,31 +30,6 @@ function clearStatus(element) {
     if (!element) return;
     element.textContent = '';
     element.className = 'admin-status admin-hidden';
-}
-
-function activatePanel(targetId) {
-    if (!tabsContainer) return;
-    const panels = [
-        { id: 'podcastPanel', element: podcastPanel },
-        { id: 'boardPanel', element: boardPanel },
-    ];
-
-    panels.forEach(({ id, element }) => {
-        if (!element) return;
-        if (id === targetId) {
-            element.classList.remove('admin-hidden');
-        } else {
-            element.classList.add('admin-hidden');
-        }
-    });
-
-    tabButtons.forEach((button) => {
-        if (button.dataset.target === targetId) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
-    });
 }
 
 function fileToBase64(file) {
@@ -125,6 +87,16 @@ if (uploadForm) {
         const description = descriptionInput.value.trim();
         const file = fileInput.files[0];
 
+        if (!title || title.length < 2) {
+            setStatus(statusBox, '에피소드 제목을 2글자 이상 입력해주세요.', 'error');
+            return;
+        }
+
+        if (!description || description.length < 5) {
+            setStatus(statusBox, '에피소드 소개를 5글자 이상 입력해주세요.', 'error');
+            return;
+        }
+
         if (!file) {
             setStatus(statusBox, '오디오 파일을 선택해주세요.', 'error');
             return;
@@ -150,113 +122,6 @@ if (uploadForm) {
             });
         } catch (error) {
             setStatus(statusBox, error.message || '파일 처리 중 문제가 발생했습니다.', 'error');
-        }
-    });
-}
-
-if (tabsContainer && tabButtons.length) {
-    tabButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const target = button.dataset.target;
-            if (!target) return;
-            activatePanel(target);
-        });
-    });
-}
-
-function parseLinksInput(raw) {
-    if (!raw) return [];
-    return raw
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-            const [url, ...labelParts] = line.split(/\s+/);
-            const label = labelParts.length > 0 ? labelParts.join(' ') : url;
-            return { url, label };
-        });
-}
-
-async function uploadBoardPost(formData) {
-    if (posting) return;
-    posting = true;
-
-    try {
-        const response = await fetch('/api/createBoardPost', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-
-        const result = await parseJsonResponse(response);
-        if (!response.ok) {
-            throw new Error(result.error || '게시글 등록에 실패했습니다.');
-        }
-
-        setStatus(boardStatusBox, `게시글이 등록되었습니다. (${result.post.title})`, 'success');
-        boardForm.reset();
-    } catch (error) {
-        setStatus(boardStatusBox, error.message || '게시글 등록 중 오류가 발생했습니다.', 'error');
-    } finally {
-        posting = false;
-    }
-}
-
-if (boardForm) {
-    boardForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const title = boardTitleInput.value.trim();
-        const content = boardContentInput.value.trim();
-        const author = boardAuthorInput ? boardAuthorInput.value.trim() : '';
-        const summary = boardSummaryInput.value.trim();
-        const rawLinks = boardLinksInput.value;
-        const imageFiles = Array.from(boardImagesInput.files || []);
-
-        if (title.length < 2) {
-            setStatus(boardStatusBox, '제목을 2글자 이상 입력해주세요.', 'error');
-            return;
-        }
-
-        if (content.length < 5) {
-            setStatus(boardStatusBox, '본문을 5글자 이상 입력해주세요.', 'error');
-            return;
-        }
-
-        for (const file of imageFiles) {
-            if (file.size > 6 * 1024 * 1024) {
-                setStatus(boardStatusBox, `${file.name} 파일 크기는 6MB 이하여야 합니다.`, 'error');
-                return;
-            }
-        }
-
-        setStatus(boardStatusBox, '게시글을 준비하는 중입니다...', 'info');
-
-        try {
-            const attachments = await Promise.all(
-                imageFiles.map(async (file) => ({
-                    name: file.name,
-                    contentType: file.type,
-                    data: await fileToBase64(file),
-                }))
-            );
-
-            await uploadBoardPost({
-                title,
-                author,
-                summary,
-                content,
-                links: parseLinksInput(rawLinks),
-                images: attachments,
-            });
-        } catch (error) {
-            setStatus(boardStatusBox, error.message || '이미지 처리 중 문제가 발생했습니다.', 'error');
-        } finally {
-            if (boardAuthorInput && !boardAuthorInput.value.trim()) {
-                boardAuthorInput.value = '관리자';
-            }
         }
     });
 }
